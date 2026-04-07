@@ -1,14 +1,14 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
+import type { Metadata } from "next";
+import Link from "next/link";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'Support',
+  title: "Support",
   description:
-    'Get help with your Aláfíà account, enrollment, or clinic setup.',
-}
+    "Get help with your Aláfíà account, enrollment, or clinic setup.",
+};
 
 export default function SupportPage() {
   return (
