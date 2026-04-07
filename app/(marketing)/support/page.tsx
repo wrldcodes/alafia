@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { metadataBase } from '@/lib/site'
+import { metadataBase } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase,
