@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import type { Route } from 'next'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { Button, Input, Select, ProgressBar, StepTracker } from '@/components/ui'
 import { useMultiStep } from '@/hooks/useMultiStep'
@@ -126,10 +127,10 @@ export function EnrollmentFlow() {
 
         <div className="relative z-10 text-[12px] font-light text-white/30 leading-[1.8]">
           Already enrolled?{' '}
-          <Link href="/login" className="text-white/50 no-underline hover:text-white">Sign in</Link>
+          <Link href="/home" className="text-white/50 no-underline hover:text-white">Sign in</Link>
           <br />
           Need help?{' '}
-          <Link href="/support" className="text-white/50 no-underline hover:text-white">Contact support</Link>
+          <Link href={'/support' as Route} className="text-white/50 no-underline hover:text-white">Contact support</Link>
         </div>
       </aside>
 

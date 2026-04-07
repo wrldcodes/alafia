@@ -159,7 +159,7 @@ export function ClinicSignupFlow() {
           ))}
           <p className="text-[12px] font-light text-slate-400 mt-4 leading-[1.8]">
             Already registered?{' '}
-            <Link href="/clinic/dashboard" className="text-teal-600 no-underline hover:underline">Sign in to your dashboard</Link>
+            <Link href="/dashboard" className="text-teal-600 no-underline hover:underline">Sign in to your dashboard</Link>
           </p>
         </div>
       </aside>
@@ -398,7 +398,7 @@ function ClinicSuccessScreen({ clinicId, name }: { clinicId: string; name: strin
         </div>
         <div className="flex flex-col gap-2.5">
           <Button variant="primary" size="lg" fullWidth asChild>
-            <a href="/clinic/dashboard">Go to my clinic dashboard</a>
+            <a href="/dashboard">Go to my clinic dashboard</a>
           </Button>
           <Button variant="outline" size="lg" fullWidth asChild>
             <a href="/clinic/team">Invite team members</a>

@@ -56,7 +56,7 @@ export function Navbar() {
 
       <div className="flex items-center gap-2.5">
         <Button variant="outline" size="sm" asChild>
-          <Link href="/login">Sign in</Link>
+          <Link href="/home">Sign in</Link>
         </Button>
         <Button variant="primary" size="sm" asChild>
           <Link href="/enroll">Get started</Link>

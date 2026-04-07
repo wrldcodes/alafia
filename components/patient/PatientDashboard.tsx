@@ -186,19 +186,23 @@ function AppointmentsView() {
       ].map(({ heading, items }) => (
         <div key={heading} className="bg-white border border-sand-200 rounded-[18px] overflow-hidden mb-4">
           <div className="px-4.5 py-3.5 border-b border-sand-100"><p className="text-[14px] font-semibold text-slate-800">{heading}</p></div>
-          {items.map(({ month, day, title, meta, status, past }) => (
-            <div key={title} className="flex items-center gap-3.5 px-4.5 py-3 border-b border-sand-50 last:border-0 hover:bg-sand-50 cursor-pointer transition-colors">
+          {items.map((item) => {
+            const past = 'past' in item && item.past
+
+            return (
+            <div key={item.title} className="flex items-center gap-3.5 px-4.5 py-3 border-b border-sand-50 last:border-0 hover:bg-sand-50 cursor-pointer transition-colors">
               <div className={`w-10.5 h-11.5 rounded-[10px] flex flex-col items-center justify-center flex-shrink-0 ${past ? 'bg-sand-100 border border-sand-200' : 'bg-teal-50 border border-teal-100'}`}>
-                <p className={`text-[9px] font-semibold uppercase tracking-wide ${past ? 'text-slate-400' : 'text-teal-600'}`}>{month}</p>
-                <p className={`font-display text-[18px] leading-none ${past ? 'text-slate-600' : 'text-teal-800'}`}>{day}</p>
+                <p className={`text-[9px] font-semibold uppercase tracking-wide ${past ? 'text-slate-400' : 'text-teal-600'}`}>{item.month}</p>
+                <p className={`font-display text-[18px] leading-none ${past ? 'text-slate-600' : 'text-teal-800'}`}>{item.day}</p>
               </div>
               <div className="flex-1">
-                <p className="text-[14px] font-medium text-slate-800">{title}</p>
-                <p className="text-[12px] font-light text-slate-400 mt-0.5">{meta}</p>
+                <p className="text-[14px] font-medium text-slate-800">{item.title}</p>
+                <p className="text-[12px] font-light text-slate-400 mt-0.5">{item.meta}</p>
               </div>
-              <Badge variant={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+              <Badge variant={item.status}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Badge>
             </div>
-          ))}
+            )
+          })}
         </div>
       ))}
     </div>

@@ -1,5 +1,19 @@
-export * from './patient'
+export type {
+	Gender,
+	BloodGroup,
+	Patient,
+	Vitals,
+	EnrollmentStep1,
+	EnrollmentStep2,
+	EnrollmentStep3,
+	EnrollmentFormData,
+	MedicalRecord as PatientMedicalRecord,
+} from './patient'
 export * from './clinic'
 export * from './appointment'
-export * from './record'
+export type {
+	RecordType,
+	Attachment,
+	MedicalRecord,
+} from './record'
 export * from './invoice'
