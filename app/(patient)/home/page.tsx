@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { PatientDashboard } from "@/components/patient";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { metadataBase } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase,
   title: "My Health Portal",
   description:
     "View your appointments, medical records, and find clinics near you.",

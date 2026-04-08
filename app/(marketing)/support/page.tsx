@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { metadataBase } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase,
   title: "Support",
   description:
     "Get help with your Aláfíà account, enrollment, or clinic setup.",
