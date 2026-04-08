@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: 'Alafia',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Preview of Alafia platform',
@@ -27,3 +27,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
+
