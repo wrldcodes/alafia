@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     images: [
       {
-        url: `${siteUrl}/opengraph-image`,
+        url: `${siteUrl}/opengraph-image.jpeg`,
         width: 1200,
         height: 630,
         alt: "Aláfíà social preview image",
