@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   title: 'Alafia - Health for Every Community',
   description: 'clinic management and patient portal system',
   openGraph: {
-    title: 'Alafia - Health for Every Community',
-    description: 'Clinic management and patient portal system for communities.',
+    title: 'Alafia ',
+    description: 'Clinic management & patient portal system ',
     url: 'https://alafia-ara.vercel.app',
     siteName: 'Alafia',
     images: [
       {
-        url: '/opengraph-image',
+        url: '/logo.png',
         width: 1200,
         height: 630,
         alt: 'Preview of Alafia platform',
