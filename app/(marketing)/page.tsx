@@ -15,13 +15,9 @@ const siteUrl = "https://alafia-ara.vercel.app";
 
 export const metadata: Metadata = {
   title: "Aláfíà — Health for Every Community",
-  description:
-    "Aláfíà connects patients in local and rural communities to clinics near them — while giving healthcare providers the tools to serve more people, better.",
   openGraph: {
     type: "website",
     title: "Aláfíà — Health for Every Community",
-    description:
-      "Aláfíà connects patients in local and rural communities to clinics near them — while giving healthcare providers the tools to serve more people, better.",
     url: siteUrl,
     images: [
       {
@@ -35,8 +31,6 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Aláfíà — Health for Every Community",
-    description:
-      "Aláfíà connects patients in local and rural communities to clinics near them — while giving healthcare providers the tools to serve more people, better.",
     images: [`${siteUrl}/opengraph-image`],
   },
 };
