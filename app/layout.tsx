@@ -2,11 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: {
-    default: 'Aláfíà — Health for Every Community',
-    template: '%s | Aláfíà',
-  },
-  keywords: ['healthcare', 'clinic management', 'community health', 'Nigeria', 'patient portal'],
+  title:  'Aláfíà — Health for Every Community',
+  description: 'clinic management and patient portal system',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

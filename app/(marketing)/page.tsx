@@ -14,6 +14,7 @@ import {
 const siteUrl = "https://alafia-ara.vercel.app";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Aláfíà — Health for Every Community",
   openGraph: {
     type: "website",
