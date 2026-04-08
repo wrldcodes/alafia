@@ -28,11 +28,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Aláfíà — Health for Every Community",
-    images: [`${siteUrl}/opengraph-image`],
-  },
 };
 
 export default function LandingPage() {
