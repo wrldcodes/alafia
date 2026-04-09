@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: 'Alafia - Health for Every Community',
       template: '%s | Alafia',
     },
-    description: ' clinic management and patient portal system',
+    description: 'Comprehensive clinic management and patient portal system connecting communities to healthcare providers.',
     keywords: [
       'clinic management',
       'patient portal',
@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'en_US',
       images: [
         {
-          url: '/opengraph-image.jpeg',
+          url: baseUrl + '/opengraph-image.jpeg',
           width: 1200,
           height: 630,
           alt: 'Alafia platform - Healthcare for communities',
@@ -57,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: 'Alafia - Health for Every Community',
       description: 'Comprehensive clinic management and patient portal system.',
-      images: ['/opengraph-image.jpeg'],
+      images: [baseUrl + '/opengraph-image.jpeg'],
       creator: '@alafiahealth',
     },
 
