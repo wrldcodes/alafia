@@ -7,10 +7,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(baseUrl),
     title: {
-      default: 'Alafia - Health for Every Community',
+      default: 'Alafia Health',
       template: '%s | Alafia',
     },
-    description: 'Comprehensive clinic management and patient portal system connecting communities to healthcare providers.',
+    description: 'Care for every community.',
     keywords: [
       'clinic management',
       'patient portal',
@@ -36,28 +36,28 @@ export async function generateMetadata(): Promise<Metadata> {
     category: 'Healthcare',
     
     openGraph: {
-      title: 'Alafia - Health for Every Community',
-      description: 'Comprehensive clinic management and patient portal system connecting communities to healthcare providers.',
+      title: 'Alafia Health',
+      description: 'Care for every community.',
       url: baseUrl,
       siteName: 'Alafia',
       type: 'website',
       locale: 'en_US',
       images: [
         {
-          url: baseUrl + '/opengraph-image.jpeg',
+          url: baseUrl + '/opengraph-image.png',
           width: 1200,
           height: 630,
           alt: 'Alafia platform - Healthcare for communities',
-          type: 'image/jpeg',
+          type: 'image/png',
         },
       ],
     },
 
     twitter: {
       card: 'summary_large_image',
-      title: 'Alafia - Health for Every Community',
-      description: 'Comprehensive clinic management and patient portal system.',
-      images: [baseUrl + '/opengraph-image.jpeg'],
+      title: 'Alafia Health',
+      description: 'Care for every community.',
+      images: [baseUrl + '/opengraph-image.png'],
       creator: '@alafiahealth',
     },
 
@@ -104,3 +104,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
+
+
+
