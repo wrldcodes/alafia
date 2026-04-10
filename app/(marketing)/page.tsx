@@ -13,23 +13,23 @@ import {
 
 const siteUrl = "https://alafia-ara.vercel.app";
 
+// app/(marketing)/page.tsx
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Aláfíà — Health for Every Community",
+  title: 'Aláfíà',
+  description: 'Aláfíà connects patients ',
   openGraph: {
-    type: "website",
-    title: "Aláfíà — Health for Every Community",
-    url: siteUrl,
-    images: [
-      {
-        url: `${siteUrl}/opengraph-image.jpeg`,
-        width: 1200,
-        height: 630,
-        alt: "Aláfíà social preview image",
-      },
-    ],
+    type: 'website',
+    title: 'Aláfíà ',
+    description: 'Aláfíà connects patient',
+    url: 'https://alafia-ara.vercel.app',
+    siteName: 'Aláfíà',
+    // No images array needed — Next.js reads opengraph-image.jpeg automatically
   },
-};
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aláfíà ',
+  },
+}
 
 export default function LandingPage() {
   return (
