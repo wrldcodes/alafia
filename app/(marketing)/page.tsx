@@ -15,12 +15,12 @@ const siteUrl = "https://alafia-ara.vercel.app";
 
 // app/(marketing)/page.tsx
 export const metadata: Metadata = {
-  title: 'Aláfíà',
-  description: 'Aláfíà connects patients ',
+  title: 'Aláfíà- Health for Every Community',
+  description: 'Aláfíà connects patients to local clinics, making healthcare accessible for all communities.',
   openGraph: {
     type: 'website',
     title: 'Aláfíà ',
-    description: 'Aláfíà connects patient',
+    description: 'Aláfíà connects patients to local clinics, making healthcare accessible for all communities.',
     url: 'https://alafia-ara.vercel.app',
     siteName: 'Aláfíà',
     // No images array needed — Next.js reads opengraph-image.jpeg automatically
