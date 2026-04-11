@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   },
 
   // ── Core SEO ───────────────────────────────────────────────────────────
-  description:
-    "Aláfíà connects patients ",
+  description: "Aláfíà connects patients ",
 
   keywords: [
     "clinic management Nigeria",
@@ -32,7 +31,18 @@ export const metadata: Metadata = {
   applicationName: "Aláfíà",
   category: "Healthcare",
 
-
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Aláfíà — Health for Every Community",
+        type: "image/png",
+      },
+    ],
+  },
+ 
   // ── Twitter / X ────────────────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
