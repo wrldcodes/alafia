@@ -31,24 +31,7 @@ export const metadata: Metadata = {
   publisher: "Aláfíà Health",
   applicationName: "Aláfíà",
   category: "Healthcare",
-  openGraph: {
-    type: "website",
-    url: baseUrl,
-    siteName: "Aláfíà",
-    locale: "en_NG", // Nigeria, not en_US — more accurate for your audience
-    title: "Aláfíà — Health for Every Community",
-    description:
-      "Connecting patients ",
-    images: [
-      {
-        url: "/opengraph-image.png", // relative — metadataBase prepends the domain
-        width: 1200,
-        height: 630,
-        alt: "Aláfíà — Health for Every Community",
-        type: "image/png",
-      },
-    ],
-  },
+
 
   // ── Twitter / X ────────────────────────────────────────────────────────
   twitter: {
