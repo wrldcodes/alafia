@@ -1,6 +1,7 @@
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui'
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui";
+import Image from "next/image";
 
 /**
  * Hero — above-the-fold section with dual CTA cards for patients and clinics.
@@ -21,14 +22,15 @@ export function Hero() {
         </div>
 
         <h1 className="font-display text-[clamp(40px,4.5vw,62px)] leading-[1.1] tracking-[-1px] text-teal-900 mb-5 animate-[fadeUp_0.7s_ease_0.25s_forwards] opacity-0">
-          Healthcare that reaches{' '}
+          Healthcare that reaches{" "}
           <em className="italic text-teal-600">everyone,</em>
-          <br />everywhere.
+          <br />
+          everywhere.
         </h1>
 
         <p className="text-[17px] font-light text-slate-400 leading-[1.75] max-w-[460px] mb-11 animate-[fadeUp_0.7s_ease_0.4s_forwards] opacity-0">
-          Aláfíà connects patients in local and rural communities to clinics near
-          them — while giving healthcare providers the tools to serve more people, better.
+          Aláfíà connects patients to clinics while giving healthcare providers
+          the tools to serve more people, better.
         </p>
 
         {/* Dual CTA cards */}
@@ -52,57 +54,85 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Right: UI previews */}
+      <div className="hidden lg:block self-end translate-y-14 lg:translate-y-20">
+        <Image
+          src="/new-doctor-transparent.png"
+          alt="Image of a doctor"
+          loading="eager"
+          
+          width={720}
+          height={400}
+          className=""
+        />
+      </div>
+      {/* Right: UI previews
       <div className="relative z-10 hidden lg:block animate-[fadeUp_0.8s_ease_0.65s_forwards] opacity-0">
         <HeroPreviews />
-      </div>
+      </div> */}
     </section>
-  )
+  );
 }
 
 interface CTACardProps {
-  href: string
-  variant: 'patient' | 'clinic'
-  label: string
-  title: string
-  desc: string
-  cta: string
+  href: string;
+  variant: "patient" | "clinic";
+  label: string;
+  title: string;
+  desc: string;
+  cta: string;
 }
 
 function CTACard({ href, variant, label, title, desc, cta }: CTACardProps) {
-  const isPatient = variant === 'patient'
+  const isPatient = variant === "patient";
   return (
     <a
       href={href}
       className={[
-        'rounded-2xl p-6 flex flex-col gap-2.5 no-underline',
-        'transition-all duration-200 hover:-translate-y-1',
+        "rounded-2xl p-6 flex flex-col gap-2.5 no-underline",
+        "transition-all duration-200 hover:-translate-y-1",
         isPatient
-          ? 'bg-teal-700 shadow-[0_8px_32px_rgba(30,125,99,0.25)] hover:shadow-[0_14px_40px_rgba(30,125,99,0.35)]'
-          : 'bg-white border border-sand-200 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.1)] hover:border-teal-200',
-      ].join(' ')}
+          ? "bg-teal-700 shadow-[0_8px_32px_rgba(30,125,99,0.25)] hover:shadow-[0_14px_40px_rgba(30,125,99,0.35)]"
+          : "bg-white border border-sand-200 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.1)] hover:border-teal-200",
+      ].join(" ")}
     >
-      <span className={`text-[10px] font-semibold tracking-[0.09em] uppercase ${isPatient ? 'text-teal-200' : 'text-slate-400'}`}>
+      <span
+        className={`text-[10px] font-semibold tracking-[0.09em] uppercase ${isPatient ? "text-teal-200" : "text-slate-400"}`}
+      >
         {label}
       </span>
-      <p className={`font-display text-[18px] leading-[1.2] ${isPatient ? 'text-white' : 'text-teal-900'}`}>
+      <p
+        className={`font-display text-[18px] leading-[1.2] ${isPatient ? "text-white" : "text-teal-900"}`}
+      >
         {title}
       </p>
-      <p className={`text-[13px] font-light leading-[1.6] ${isPatient ? 'text-white/70' : 'text-slate-400'}`}>
+      <p
+        className={`text-[13px] font-light leading-[1.6] ${isPatient ? "text-white/70" : "text-slate-400"}`}
+      >
         {desc}
       </p>
-      <span className={`inline-flex items-center gap-1.5 text-[13px] font-medium mt-1.5 ${isPatient ? 'text-white/90' : 'text-teal-600'}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 text-[13px] font-medium mt-1.5 ${isPatient ? "text-white/90" : "text-teal-600"}`}
+      >
         {cta} <ArrowRight size={13} />
       </span>
     </a>
-  )
+  );
 }
 
 function HeroPreviews() {
   return (
     <div className="flex flex-col gap-3.5">
+      <div>
+        <Image
+          src="/doctor.png"
+          alt="Image of a doctor"
+          width={720}
+          height={400}
+          className=""
+        />
+      </div>
       {/* Patient health card */}
-      <div className="bg-teal-800 rounded-2xl p-6 text-white">
+      {/* <div className="bg-teal-800 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <span className="font-display text-[15px] text-teal-200">Aláfíà</span>
           <span className="bg-white/12 border border-white/20 text-white/80 text-[11px] font-medium px-2.5 py-0.5 rounded-full">Community member</span>
@@ -132,7 +162,7 @@ function HeroPreviews() {
       </div>
 
       {/* Clinic mini dashboard */}
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+      {/* <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
         <div className="bg-sand-50 border-b border-sand-200 px-4 py-3 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ffbfbf]"/>
           <span className="w-2.5 h-2.5 rounded-full bg-[#ffd98a]"/>
@@ -159,7 +189,7 @@ function HeroPreviews() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
-  )
+  );
 }

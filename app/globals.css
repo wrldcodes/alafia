@@ -1,8 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --button-linear-from: #a887e9;
+    --button-linear-to: #1e7d63;
+    --button-linear-hover-from: #1e7d63;
+    --button-linear-hover-to: #0e4e3e;
+  }
+}
 
 @layer base {
   html {

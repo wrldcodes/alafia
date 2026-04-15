@@ -1,6 +1,6 @@
 # Aláfíà — Health for Every Community
 
-> A modern, two-sided community health platform that connects patients in local and rural communities to clinics near them, while giving healthcare providers the tools to serve more people, better.
+> A modern, two-sided community health platform that connects patients in local and rural communities to clinics in a unified system for managing appointments,medical records, and care workflow.
 
 ---
 

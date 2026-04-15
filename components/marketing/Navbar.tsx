@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -31,21 +32,13 @@ export function Navbar() {
         href="/"
         className="flex items-center gap-2.5 font-display text-[22px] text-teal-800 no-underline"
       >
-        <div className="w-[34px] h-[34px] bg-teal-700 rounded-[10px] flex items-center justify-center flex-shrink-0">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          >
-            <path d="M12 21C12 21 4 15 4 9a8 8 0 0 1 16 0c0 6-8 12-8 12z" />
-            <circle cx="12" cy="9" r="2.5" fill="white" stroke="none" />
-          </svg>
-        </div>
-        Aláfíà
+        <Image
+          src="/alafialogo-transparent.png"
+          alt="Aláfíà logo"
+          width={1792}
+          height={817}
+          className="block h-[40px] w-auto"
+        />
       </Link>
 
       <ul className="hidden md:flex items-center gap-8 list-none">
@@ -69,7 +62,7 @@ export function Navbar() {
         <Button variant="outline" size="sm" asChild>
           <Link href="/home">Sign in</Link>
         </Button>
-        <Button variant="primary" size="sm" asChild>
+        <Button variant="linear" size="sm" asChild>
           <Link href="/enroll">Get started</Link>
         </Button>
       </div>
