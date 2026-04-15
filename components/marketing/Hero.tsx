@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui";
 import Image from "next/image";
+import { TestimonialCard } from "./TestimonialCard";
 
 /**
  * Hero — above-the-fold section with dual CTA cards for patients and clinics.
@@ -54,17 +55,24 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="hidden lg:block self-end translate-y-14 lg:translate-y-20">
+      <div className="hidden lg:flex flex-col items-end justify-end relative self-end translate-y-14 lg:translate-y-20">
         <Image
           src="/new-doctor-transparent.png"
           alt="Image of a doctor"
           loading="eager"
-          
           width={720}
           height={400}
-          className=""
+          className="block w-full h-auto"
+        />
+
+        <TestimonialCard
+          className="absolute bottom-6 right-0 w-[min(92%,340px)]"
+          name="Amaka Obi"
+          title="Community member"
+          quote="Clear guidance, quick appointments, and so easy to use. It feels calm and personal."
         />
       </div>
+
       {/* Right: UI previews
       <div className="relative z-10 hidden lg:block animate-[fadeUp_0.8s_ease_0.65s_forwards] opacity-0">
         <HeroPreviews />

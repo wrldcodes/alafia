@@ -23,6 +23,16 @@
 }
 
 @layer utilities {
+  .text-linear-accent {
+    background-image: linear-gradient(
+      90deg,
+      var(--button-linear-from) 0%,
+      var(--button-linear-to) 56%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   .animate-delay-100 {
     animation-delay: 100ms;
   }

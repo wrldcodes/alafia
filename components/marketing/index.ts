@@ -1,5 +1,6 @@
 export { Navbar }      from './Navbar'
 export { Hero }        from './Hero'
+export { TestimonialCard } from './TestimonialCard'
 export { TrustStrip }  from './TrustStrip'
 export { TwoAudiences }from './TwoAudiences'
 export { HowItWorks }  from './HowItWorks'
