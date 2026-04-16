@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { metadataBase } from "@/lib/site";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 
 export const metadata: Metadata = {
   metadataBase,
@@ -10,5 +11,9 @@ export default function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <SmoothScrollProvider>
+      {children}
+    </SmoothScrollProvider>
+  );
 }

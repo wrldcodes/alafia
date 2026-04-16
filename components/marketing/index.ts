@@ -1,9 +1,9 @@
-export { Navbar }      from './Navbar'
-export { Hero }        from './Hero'
-export { TestimonialCard } from './TestimonialCard'
-export { TrustStrip }  from './TrustStrip'
-export { TwoAudiences }from './TwoAudiences'
-export { HowItWorks }  from './HowItWorks'
-export { Features }    from './Features'
-export { FinalCTA }    from './FinalCTA'
-export { Footer }      from './Footer'
+export { Navbar } from "./Navbar";
+export { Hero } from "./Hero";
+export { TestimonialCard } from "./TestimonialCard";
+export { TrustStrip } from "./TrustStrip";
+export { TwoAudiences } from "./TwoAudiences";
+export { HowItWorks } from "./HowItWorks";
+export { Features } from "./Features";
+export { FinalCTA } from "./FinalCTA";
+export { Footer } from "./Footer";

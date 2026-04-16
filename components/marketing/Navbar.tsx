@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useLenis } from "@/components/providers/SmoothScrollProvider";
 
 /**
  * Navbar — sticky top navigation with scroll-shadow effect.
@@ -11,12 +12,36 @@ import { cn } from "@/lib/utils";
  */
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const lenis = useLenis();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  function handleHashClick(e: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (!href.startsWith("#") || href === "#") return;
+    e.preventDefault();
+
+    const id = href.slice(1);
+    const target =
+      document.getElementById(id) ?? (document.querySelector(href) as HTMLElement | null);
+
+    if (!target) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (prefersReducedMotion || !lenis) {
+      target.scrollIntoView({ behavior: "auto", block: "start" });
+      return;
+    }
+
+    // Offset to account for the fixed navbar height.
+    lenis.scrollTo(target, { offset: -85 });
+  }
 
   return (
     <nav
@@ -38,6 +63,8 @@ export function Navbar() {
           width={1792}
           height={817}
           className="block h-[40px] w-auto"
+          priority
+          loading="eager"
         />
       </Link>
 
@@ -51,6 +78,7 @@ export function Navbar() {
             <a
               href={href}
               className="text-sm font-light text-slate-600 no-underline transition-colors hover:text-teal-700"
+              onClick={(e) => handleHashClick(e, href)}
             >
               {label}
             </a>
