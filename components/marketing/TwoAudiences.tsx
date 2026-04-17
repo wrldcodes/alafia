@@ -1,42 +1,39 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useRef } from "react";
 import { ArrowRight, Check, User, Building2 } from "lucide-react";
-import { ScrollRevealSection } from "@/components/providers/ScrollRevealSection";
+import { useGsapReveal } from "@/hooks/useGsapReveal";
 
 /**
- * TwoAudiences — clip-path heading + left/right cards (`data-reveal`).
+ * TwoAudiences — "One platform. Two sides of care." section with
+ * patient (dark) and clinic (light) cards side by side.
+ * Cards animate smoothly as you scroll with parallax effect.
  */
 export function TwoAudiences() {
+  const ref = useGsapReveal<HTMLDivElement>();
+
   return (
-    <ScrollRevealSection
+    <div
+      ref={ref}
       className="max-w-[1100px] mx-auto px-13 py-25"
       id="for-you"
     >
       <div className="mb-14">
-        <div data-reveal="up" className="mb-3.5">
-          <SectionTag icon={<User size={13} />} label="Built for two" />
-        </div>
-        <h2
-          data-reveal="clip"
-          className="font-display text-[clamp(30px,3.5vw,46px)] leading-[1.1] tracking-[-0.6px] text-teal-900 mb-3.5"
-        >
+        <SectionTag data-reveal="up" icon={<User size={13} />} label="Built for two" />
+        <h2 data-reveal="up" className="font-display text-[clamp(30px,3.5vw,46px)] leading-[1.1] tracking-[-0.6px] text-teal-900 mb-3.5">
           One platform.
           <br />
           Two sides of care.
         </h2>
-        <p
-          data-reveal="up"
-          className="text-[17px] font-light text-slate-400 leading-[1.75] max-w-[500px]"
-        >
-          Whether you&apos;re a patient in a rural community or a clinic serving
+        <p data-reveal="up" className="text-[17px] font-light text-slate-400 leading-[1.75] max-w-[500px]">
+          Whether you're a patient in a rural community or a clinic serving
           hundreds — Aláfíà was built with you in mind.
         </p>
       </div>
 
-      <div
-        data-parallax="0.08"
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AudienceCard
+          dataReveal="left"
           variant="community"
           who="For community members"
           title="Your health, in your hands."
@@ -49,9 +46,9 @@ export function TwoAudiences() {
           ]}
           ctaLabel="Enroll as a patient"
           ctaHref="/enroll"
-          reveal="left"
         />
         <AudienceCard
+          dataReveal="right"
           variant="clinic"
           who="For clinics & healthcare providers"
           title="Run your clinic with clarity."
@@ -64,15 +61,14 @@ export function TwoAudiences() {
           ]}
           ctaLabel="Set up your clinic"
           ctaHref="/clinic/signup"
-          cardId="for-clinics"
-          reveal="right"
         />
       </div>
-    </ScrollRevealSection>
+    </div>
   );
 }
 
 interface AudienceCardProps {
+  dataReveal?: string;
   variant: "community" | "clinic";
   who: string;
   title: string;
@@ -80,11 +76,10 @@ interface AudienceCardProps {
   benefits: string[];
   ctaLabel: string;
   ctaHref: string;
-  cardId?: string;
-  reveal: "left" | "right";
 }
 
 function AudienceCard({
+  dataReveal,
   variant,
   who,
   title,
@@ -92,20 +87,21 @@ function AudienceCard({
   benefits,
   ctaLabel,
   ctaHref,
-  cardId,
-  reveal,
 }: AudienceCardProps) {
   const isCommunity = variant === "community";
   return (
     <div
-      id={cardId}
-      data-reveal={reveal}
-      className={[
-        "rounded-[2rem] p-11 relative overflow-hidden",
-        isCommunity
-          ? "bg-teal-800 text-white"
-          : "bg-earth-50 border border-earth-200",
-      ].join(" ")}
+      data-reveal={dataReveal}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "2rem",
+        padding: "2.75rem",
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: isCommunity ? "rgb(20, 88, 72)" : "rgb(245, 240, 232)",
+        color: isCommunity ? "white" : "inherit",
+      }}
     >
       <p
         className={`text-[11px] font-semibold tracking-[0.09em] uppercase mb-2.5 ${isCommunity ? "text-teal-200" : "text-earth-600"}`}
@@ -157,9 +153,9 @@ function AudienceCard({
   );
 }
 
-function SectionTag({ icon, label }: { icon: ReactNode; label: string }) {
+function SectionTag({ icon, label, dataReveal }: { icon: React.ReactNode; label: string; dataReveal?: string }) {
   return (
-    <div className="inline-flex items-center gap-1.5 text-[12px] font-medium text-teal-600 tracking-[0.08em] uppercase">
+    <div data-reveal={dataReveal} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-teal-600 tracking-[0.08em] uppercase mb-3.5">
       {icon}
       {label}
     </div>

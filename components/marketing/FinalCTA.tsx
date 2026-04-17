@@ -1,50 +1,42 @@
 "use client";
 
-import { ScrollRevealSection } from "@/components/providers/ScrollRevealSection";
+import { useRef } from "react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
+/**
+ * FinalCTA — dark teal banner with dual patient/clinic CTAs.
+ * Animates in with scroll reveal effect.
+ */
 export function FinalCTA() {
+  const ref = useScrollReveal<HTMLDivElement>();
+
   return (
-    <ScrollRevealSection
-      as="div"
-      className="mx-13 mb-25 bg-teal-800 rounded-[2rem] px-18 py-20 grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-12 relative overflow-hidden"
-    >
-      <div
-        data-parallax="0.22"
-        className="pointer-events-none absolute top-[-100px] right-[-80px] w-[460px] h-[460px] rounded-full bg-[radial-gradient(ellipse,rgba(58,171,138,0.2)_0%,transparent_70%)]"
-      />
+    <div ref={ref} className="mx-13 mb-25 bg-teal-800 rounded-[2rem] px-18 py-20 grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-12 relative overflow-hidden">
+      <div className="absolute top-[-100px] right-[-80px] w-[460px] h-[460px] rounded-full bg-[radial-gradient(ellipse,rgba(58,171,138,0.2)_0%,transparent_70%)]" />
       <div className="relative z-10">
-        <h2
-          data-reveal="clip"
-          className="font-display text-[clamp(28px,3vw,42px)] leading-[1.15] text-white mb-3 tracking-[-0.5px]"
-        >
+        <h2 className="reveal font-display text-[clamp(28px,3vw,42px)] leading-[1.15] text-white mb-3 tracking-[-0.5px]">
           Better healthcare starts with better access.
         </h2>
-        <p
-          data-reveal="up"
-          className="text-[16px] font-light text-white/50 leading-[1.7]"
-        >
+        <p className="reveal text-[16px] font-light text-white/50 leading-[1.7]">
           Join Aláfíà as a patient or a clinic.
           <br />
           Free to start. No credit card needed.
         </p>
       </div>
-      <div
-        data-reveal="up"
-        className="flex flex-col gap-2.5 relative z-10 flex-shrink-0"
-      >
+      <div className="flex flex-col gap-2.5 relative z-10 flex-shrink-0">
         <a
           href="/enroll"
-          className="inline-flex items-center justify-center px-7.5 py-3.5 rounded-full bg-white text-teal-800 text-[14px] font-semibold no-underline transition-all hover:bg-teal-50 hover:-translate-y-px whitespace-nowrap"
+          className="reveal inline-flex items-center justify-center px-7.5 py-3.5 rounded-full bg-white text-teal-800 text-[14px] font-semibold no-underline transition-all hover:bg-teal-50 hover:-translate-y-px whitespace-nowrap"
         >
           Enroll as a patient
         </a>
         <a
           href="/clinic/signup"
-          className="inline-flex items-center justify-center px-7.5 py-3.5 rounded-full bg-transparent text-white/80 text-[14px] font-medium border border-white/20 no-underline transition-all hover:border-white/50 hover:text-white whitespace-nowrap"
+          className="reveal inline-flex items-center justify-center px-7.5 py-3.5 rounded-full bg-transparent text-white/80 text-[14px] font-medium border border-white/20 no-underline transition-all hover:border-white/50 hover:text-white whitespace-nowrap"
         >
           Set up a clinic
         </a>
       </div>
-    </ScrollRevealSection>
+    </div>
   );
 }

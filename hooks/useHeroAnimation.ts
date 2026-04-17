@@ -96,9 +96,9 @@ export function useHeroAnimation(rootRef: RefObject<HTMLElement | null>) {
       if (imgWrap && heroImg) {
         gsap.fromTo(
           heroImg,
-          { yPercent: 0, scale: 1 },
+          { yPercent: -14, scale: 1.04 },
           {
-            yPercent: 8,
+            yPercent: 14,
             scale: 1,
             ease: "none",
             scrollTrigger: {
