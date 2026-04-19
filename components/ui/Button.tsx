@@ -35,10 +35,17 @@ const variants: Record<ButtonVariant, string> = {
     "bg-gradient-to-r from-[var(--button-linear-from)] to-[var(--button-linear-to)] text-white hover:from-[var(--button-linear-hover-from)] hover:to-[var(--button-linear-hover-to)]",
 };
 
+// Central place to tune button corner rounding without hunting through size classes.
+const radiusBySize: Record<ButtonSize, string> = {
+  sm: "rounded-xl",
+  md: "rounded-[1.25rem]",
+  lg: "rounded-[1.5rem]",
+};
+
 const sizes: Record<ButtonSize, string> = {
-  sm: "px-3 py-2 text-xs rounded-full gap-1.5",
-  md: "px-5 py-2.5 text-sm rounded-full gap-2",
-  lg: "px-8 py-3.5 text-base rounded-full gap-2",
+  sm: `px-3 py-2 text-xs gap-1.5 ${radiusBySize.sm}`,
+  md: `px-4 py-2 text-sm gap-2 ${radiusBySize.md}`,
+  lg: `px-8 py-3.5 text-base gap-2 ${radiusBySize.lg}`,
 };
 
 /**

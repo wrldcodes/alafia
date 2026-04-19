@@ -34,9 +34,9 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <>
-      <Navbar />
-      <main>
+      
         <Hero />
+      <main>
         <TrustStrip />
         <TwoAudiences />
         <HowItWorks />

@@ -1,6 +1,6 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import './globals.css'
-
+import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider'
 export const metadata: Metadata = {
   title: {
     default: 'Aláfíà — Health for Every Community',
@@ -14,7 +14,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href='/hero-poster.jpg'
+          fetchPriority='high'
+        />
+      </head>
+        
+      <body>
+        <SmoothScrollProvider>  
+          {children}
+        </SmoothScrollProvider>
+      </body>
     </html>
   )
 }

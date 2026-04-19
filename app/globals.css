@@ -16,10 +16,23 @@
 
 @layer base {
   html {
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
   }
   body {
-    @apply font-body bg-sand-50 text-slate-800 antialiased;
+    font-family: "Outfit", "system-ui", "sans-serif";
+    background-color: #faf9f6;
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .hero-mobile-bg {
+    background-image: url("/new-doctor-transparent.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
   }
 }
 
