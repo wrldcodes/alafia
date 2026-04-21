@@ -4,6 +4,7 @@ import { signToken, cookieName } from "@/lib/auth";
 import { registerSchema } from "@/lib/validations";
 import bcrypt from "bcrypt";
 
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = registerSchema.safeParse(body);
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash },
+    data: { name, email, password: passwordHash },
   });
 
   const token = await signToken({ userId: user.id, email: user.email });
