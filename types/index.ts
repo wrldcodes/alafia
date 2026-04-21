@@ -13,3 +13,4 @@ export * from "./clinic";
 export * from "./appointment";
 export type { RecordType, Attachment, MedicalRecord } from "./record";
 export * from "./invoice";
+export type { CookieResponse } from "./auth";
