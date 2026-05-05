@@ -12,12 +12,159 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  SUPER_ADMIN    // platform-level
+  CLINIC_ADMIN   // manages one clinic — full control
+  CLINIC_STAFF   // receptionist, coordinator
+  DOCTOR         // sees their own appointments only
+  PATIENT        // books appointments
+}
+
+enum AppointmentStatus {
+  PENDING        // patient booked, awaiting clinic confirmation
+  CONFIRMED      // clinic/staff confirmed
+  CANCELLED      // cancelled by clinic or patient
+  COMPLETED      // visit done, ready for medical record
+  NO_SHOW        // patient didn't arrive
+  RESCHEDULED    // superseded by a new appointment
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED        // manually blocked by clinic admin/staff
+}
+
+model ClinicStaff {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicId        String
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  role            Role      // CLINIC_ADMIN | CLINIC_STAFF | DOCTOR
+  isActive        Boolean   @default(true)
+
+  // Doctor-specific (null for non-doctor staff)
+  specialization  String?
+  qualifications  String?
+  bio             String?
+  consultationFee Decimal?  @db.Decimal(10, 2)
+
+  // Relations
+  workingHours    WorkingHours[]
+  slots           TimeSlot[]
+  appointments    Appointment[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([clinicId, role])
+  @@index([clinicId, isActive])
+}
+
+// ─── WorkingHours ────────────────────────────────────────────────────────
+// Set and managed entirely by CLINIC_ADMIN or CLINIC_STAFF.
+// Doctors do not set their own schedule.
+model WorkingHours {
+  id          String      @id @default(cuid())
+  clinicId    String
+  clinic      Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  staffId     String
+  staff       ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int         // 0 Sunday … 6 Saturday
+  startTime   String      // "08:00"
+  endTime     String      // "17:00"
+  isActive    Boolean     @default(true)
+
+  @@unique([staffId, dayOfWeek])
+  @@index([clinicId])
+}
+
+model TimeSlot {
+  id          String      @id @default(cuid())
+  clinicId    String
+  clinic      Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  staffId     String
+  staff       ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date        DateTime    @db.Date
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int         @default(30) // minutes
+  status      SlotStatus  @default(AVAILABLE)
+
+  appointment Appointment?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([clinicId, date, status])
+  @@index([staffId, date])
+}
+
+model Appointment {
+  id                String            @id @default(cuid())
+
+  clinicId          String
+  clinic            Clinic            @relation(fields: [clinicId], references: [id])
+  patientId         String
+  patient           Patient           @relation(fields: [patientId], references: [id])
+  doctorId          String            // ClinicStaff.id (role must be DOCTOR)
+  doctor            ClinicStaff       @relation(fields: [doctorId], references: [id])
+  slotId            String            @unique
+  slot              TimeSlot          @relation(fields: [slotId], references: [id])
+
+  status            AppointmentStatus @default(PENDING)
+  reason            String            // patient's stated reason
+  notes             String?           // doctor notes post-visit (doctor can write)
+  cancelReason      String?
+  cancelledById     String?           // userId of whoever cancelled
+
+  // Rescheduling: points to the appointment this replaced
+  rescheduledFromId String?
+
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  completedAt       DateTime?
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([clinicId, status])
+  @@index([patientId])
+  @@index([doctorId, status])
+}
+
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  patient      Patient?
+  clinic       Clinic?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?
+  phone       String?
+  createdAt   DateTime @default(now())
+}
+
+model Clinic {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicName   String
+  address      String?
+  phone        String?
+  licenseNumber String?
+  createdAt    DateTime @default(now())
 }

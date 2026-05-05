@@ -2,12 +2,21 @@
 
 export type Gender = 'Male' | 'Female' | 'Prefer not to say'
 
+export interface PatientData {
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  phone: string
+}
+
 export type BloodGroup =
   | 'A+' | 'A−'
   | 'B+' | 'B−'
   | 'AB+' | 'AB−'
   | 'O+' | 'O−'
   | 'Unknown'
+
+
 
 export interface Patient {
   id: string              // ALF-XXXXXX

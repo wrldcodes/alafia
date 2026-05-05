@@ -1,7 +1,13 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { cookies } from "next/headers";
-
+import { NextResponse } from "next/server"; 
 const COOKIE_NAME = "accessToken";
+
+export type SessionUser = {
+  userId: string;
+  email: string;
+  role: "PATIENT" | "CLINIC";
+};
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
@@ -11,7 +17,19 @@ function getJwtSecret() {
   return secret;
 }
 
-export async function signToken(payload: { userId: string; email: string }) {
+export function requireRole(
+  session: { role: string } | null,
+  role: "PATIENT" | "CLINIC",
+) {
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.role !== role)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  return null; // null means passed
+}
+
+
+export async function signToken(payload: SessionUser) {
   return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 }
 
@@ -20,10 +38,18 @@ export async function verifyToken(token: string) {
     const decoded = jwt.verify(token, getJwtSecret());
     if (typeof decoded === "string") return null;
 
-    const payload = decoded as JwtPayload & { userId?: string; email?: string };
-    if (!payload.userId || !payload.email) return null;
+    const payload = decoded as JwtPayload & {
+      userId?: string;
+      email?: string;
+      role?: "PATIENT" | "CLINIC";
+    };
+    if (!payload.userId || !payload.email || !payload.role) return null;
 
-    return { userId: payload.userId, email: payload.email };
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    };
   } catch {
     return null;
   }
@@ -40,3 +66,5 @@ export async function getSession() {
 export function cookieName() {
   return COOKIE_NAME;
 }
+
+ 

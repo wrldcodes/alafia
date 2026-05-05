@@ -1,27 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import jwt from "jsonwebtoken";
-import type { CookieResponse } from "@/types";
-
-export const generateToken = (userId: string, res: CookieResponse): string => {
-  const secret = process.env.JWT_SECRET!;
-  const expiresIn =
-    (process.env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] | undefined) ??
-    "7d";
-
-  const payload = { id: userId };
-  const token = jwt.sign(payload, secret, {
-    expiresIn,
-  });
-
-  res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  });
-  return token;
-};
 
 /** Merge Tailwind classes safely */
 export function cn(...inputs: ClassValue[]): string {

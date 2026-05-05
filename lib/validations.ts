@@ -1,35 +1,28 @@
+
 import { z } from "zod";
 
-/**
- * Validation schema for user registration
- * Validates name, email format, and password strength
- */
-const registerSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters"),
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Please provide a valid email")
-    .toLowerCase(),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
+export const roleSchema = z.enum(["PATIENT", "CLINIC"]);
+
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
 });
 
-/**
- * Validation schema for user login
- * Validates email format and ensures password is provided
- */
-const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Please provide a valid email")
-    .toLowerCase(),
-  password: z.string().min(1, "Password is required"),
+export const patientRegisterSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  dateOfBirth: z.string().optional(), // ISO string e.g "1995-04-12"
+  phone: z.string().optional(),
 });
 
-export { registerSchema, loginSchema };
+export const clinicRegisterSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  clinicName: z.string().min(2),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  licenseNumber: z.string().optional(),
+});
