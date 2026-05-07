@@ -1,11 +1,10 @@
-
 // Clinic admin/staff sets and retrieves a doctor's weekly schedule.
 // Doctors do not touch this — the clinic controls availability.
 //
 // GET /api/clinics/:clinicId/staff/:staffId/working-hours
 // PUT /api/clinics/:clinicId/staff/:staffId/working-hours
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -17,8 +16,8 @@ import {
 type Params = { params: { clinicId: string; staffId: string } };
 
 export const GET = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
@@ -39,8 +38,8 @@ export const GET = withErrorHandler(
 // Body: { schedule: [{ dayOfWeek: 1, startTime: "08:00", endTime: "17:00", isActive: true }] }
 // dayOfWeek: 0 = Sunday … 6 = Saturday
 export const PUT = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN", "CLINIC_STAFF"]);
     requireClinicAccess(session, params.clinicId);
 

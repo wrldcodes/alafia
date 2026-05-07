@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -12,140 +10,52 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────
 
 enum Role {
-  SUPER_ADMIN    // platform-level
-  CLINIC_ADMIN   // manages one clinic — full control
-  CLINIC_STAFF   // receptionist, coordinator
-  DOCTOR         // sees their own appointments only
-  PATIENT        // books appointments
+  SUPER_ADMIN  // platform-level
+  CLINIC_ADMIN // manages one clinic — full control
+  CLINIC_STAFF // receptionist, coordinator
+  DOCTOR       // sees their own appointments only
+  PATIENT      // books appointments
 }
 
 enum AppointmentStatus {
-  PENDING        // patient booked, awaiting clinic confirmation
-  CONFIRMED      // clinic/staff confirmed
-  CANCELLED      // cancelled by clinic or patient
-  COMPLETED      // visit done, ready for medical record
-  NO_SHOW        // patient didn't arrive
-  RESCHEDULED    // superseded by a new appointment
+  PENDING     // patient booked, awaiting clinic confirmation
+  CONFIRMED   // clinic/staff confirmed
+  CANCELLED   // cancelled by clinic or patient
+  COMPLETED   // visit done, ready for medical record
+  NO_SHOW     // patient didn't arrive
+  RESCHEDULED // superseded by a new appointment
 }
 
 enum SlotStatus {
   AVAILABLE
   BOOKED
-  BLOCKED        // manually blocked by clinic admin/staff
+  BLOCKED // manually blocked by clinic admin/staff
 }
 
-model ClinicStaff {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinicId        String
-  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  role            Role      // CLINIC_ADMIN | CLINIC_STAFF | DOCTOR
-  isActive        Boolean   @default(true)
-
-  // Doctor-specific (null for non-doctor staff)
-  specialization  String?
-  qualifications  String?
-  bio             String?
-  consultationFee Decimal?  @db.Decimal(10, 2)
-
-  // Relations
-  workingHours    WorkingHours[]
-  slots           TimeSlot[]
-  appointments    Appointment[]
-
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([clinicId, role])
-  @@index([clinicId, isActive])
-}
-
-// ─── WorkingHours ────────────────────────────────────────────────────────
-// Set and managed entirely by CLINIC_ADMIN or CLINIC_STAFF.
-// Doctors do not set their own schedule.
-model WorkingHours {
-  id          String      @id @default(cuid())
-  clinicId    String
-  clinic      Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  staffId     String
-  staff       ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  dayOfWeek   Int         // 0 Sunday … 6 Saturday
-  startTime   String      // "08:00"
-  endTime     String      // "17:00"
-  isActive    Boolean     @default(true)
-
-  @@unique([staffId, dayOfWeek])
-  @@index([clinicId])
-}
-
-model TimeSlot {
-  id          String      @id @default(cuid())
-  clinicId    String
-  clinic      Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  staffId     String
-  staff       ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  date        DateTime    @db.Date
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int         @default(30) // minutes
-  status      SlotStatus  @default(AVAILABLE)
-
-  appointment Appointment?
-
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@index([clinicId, date, status])
-  @@index([staffId, date])
-}
-
-model Appointment {
-  id                String            @id @default(cuid())
-
-  clinicId          String
-  clinic            Clinic            @relation(fields: [clinicId], references: [id])
-  patientId         String
-  patient           Patient           @relation(fields: [patientId], references: [id])
-  doctorId          String            // ClinicStaff.id (role must be DOCTOR)
-  doctor            ClinicStaff       @relation(fields: [doctorId], references: [id])
-  slotId            String            @unique
-  slot              TimeSlot          @relation(fields: [slotId], references: [id])
-
-  status            AppointmentStatus @default(PENDING)
-  reason            String            // patient's stated reason
-  notes             String?           // doctor notes post-visit (doctor can write)
-  cancelReason      String?
-  cancelledById     String?           // userId of whoever cancelled
-
-  // Rescheduling: points to the appointment this replaced
-  rescheduledFromId String?
-
-  confirmedAt       DateTime?
-  cancelledAt       DateTime?
-  completedAt       DateTime?
-
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  @@index([clinicId, status])
-  @@index([patientId])
-  @@index([doctorId, status])
-}
-
+// ─── User ─────────────────────────────────────────────────────────────────
+// Base auth record. Role determines which profile relation is populated.
+// PATIENT      → Patient record
+// CLINIC_ADMIN → Clinic record (the owner of the clinic)
+// DOCTOR/CLINIC_STAFF/CLINIC_ADMIN (staff) → ClinicStaff record
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String       @id @default(cuid())
+  email        String       @unique
   passwordHash String
   role         Role
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Profile relations — only one will be populated per user
   patient      Patient?
   clinic       Clinic?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  clinicStaff  ClinicStaff?
 }
+
+// ─── Patient ──────────────────────────────────────────────────────────────
 
 model Patient {
   id          String   @id @default(cuid())
@@ -156,15 +66,140 @@ model Patient {
   dateOfBirth DateTime?
   phone       String?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  appointments Appointment[]
 }
 
+// ─── Clinic ───────────────────────────────────────────────────────────────
+// The clinic owner account. CLINIC_ADMIN role on User.
+// All staff, slots, and appointments belong to this clinic.
+
 model Clinic {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinicName   String
-  address      String?
-  phone        String?
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicName    String
+  address       String?
+  phone         String?
   licenseNumber String?
-  createdAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  // Clinic owns all of these
+  staff        ClinicStaff[]
+  workingHours WorkingHours[]
+  slots        TimeSlot[]
+  appointments Appointment[]
+}
+
+// ─── ClinicStaff ──────────────────────────────────────────────────────────
+// Any user working at a clinic: CLINIC_ADMIN, CLINIC_STAFF, or DOCTOR.
+// Created by the clinic admin. Doctors are staff with role DOCTOR.
+
+model ClinicStaff {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicId        String
+  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  role            Role     // CLINIC_ADMIN | CLINIC_STAFF | DOCTOR
+  isActive        Boolean  @default(true)
+
+  // Doctor-specific fields (null for non-doctor staff)
+  specialization  String?
+  qualifications  String?
+  bio             String?
+  consultationFee Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  workingHours WorkingHours[]
+  slots        TimeSlot[]
+  appointments Appointment[]
+
+  @@index([clinicId, role])
+  @@index([clinicId, isActive])
+}
+
+// ─── WorkingHours ─────────────────────────────────────────────────────────
+// Set by CLINIC_ADMIN or CLINIC_STAFF. Doctors do not set their own schedule.
+// dayOfWeek: 0 = Sunday … 6 = Saturday
+
+model WorkingHours {
+  id        String      @id @default(cuid())
+  clinicId  String
+  clinic    Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  dayOfWeek Int         // 0 Sunday … 6 Saturday
+  startTime String      // "08:00"
+  endTime   String      // "17:00"
+  isActive  Boolean     @default(true)
+
+  @@unique([staffId, dayOfWeek])
+  @@index([clinicId])
+}
+
+// ─── TimeSlot ─────────────────────────────────────────────────────────────
+// Generated by the clinic from WorkingHours. Patients book these.
+// Clinic can BLOCK slots manually (holiday, emergency, etc.)
+
+model TimeSlot {
+  id       String      @id @default(cuid())
+  clinicId String
+  clinic   Clinic      @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  staffId  String
+  staff    ClinicStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date     DateTime    @db.Date
+  startTime DateTime
+  endTime   DateTime
+  duration  Int        @default(30) // minutes
+  status    SlotStatus @default(AVAILABLE)
+
+  appointment Appointment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clinicId, date, status])
+  @@index([staffId, date])
+}
+
+// ─── Appointment ──────────────────────────────────────────────────────────
+// Created when a patient books a slot.
+// Lifecycle (confirm/cancel/complete) managed by clinic staff.
+// Doctors can view and add notes only.
+
+model Appointment {
+  id       String @id @default(cuid())
+
+  clinicId  String
+  clinic    Clinic      @relation(fields: [clinicId], references: [id])
+  patientId String
+  patient   Patient     @relation(fields: [patientId], references: [id])
+  doctorId  String      // ClinicStaff.id — must have role DOCTOR
+  doctor    ClinicStaff @relation(fields: [doctorId], references: [id])
+  slotId    String      @unique
+  slot      TimeSlot    @relation(fields: [slotId], references: [id])
+
+  status          AppointmentStatus @default(PENDING)
+  reason          String            // patient's stated reason
+  notes           String?           // doctor adds post-visit
+  cancelReason    String?
+  cancelledById   String?           // userId of whoever cancelled
+  rescheduledFromId String?         // previous appointment id
+
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clinicId, status])
+  @@index([patientId])
+  @@index([doctorId, status])
 }

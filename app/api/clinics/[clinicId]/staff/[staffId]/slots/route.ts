@@ -8,7 +8,7 @@
 // PATCH /api/clinics/:clinicId/staff/:staffId/slots/:slotId
 //      → clinic admin blocks/unblocks a specific slot
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -21,7 +21,7 @@ type Params = { params: { clinicId: string; staffId: string } };
 
 // List available slots for a given date
 export const GET = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
+  async (req: Request, { params }: Params) => {
     const { searchParams } = new URL(req.url);
     const dateStr = searchParams.get("date");
 

@@ -1,9 +1,6 @@
 // app/api/clinics/[clinicId]/appointments/route.ts
-// GET  /api/clinics/:clinicId/appointments   — clinic views all appointments
-//      ?status=PENDING&doctorId=xxx&date=YYYY-MM-DD  (all optional filters)
-// POST /api/clinics/:clinicId/appointments   — patient books an appointment
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -14,9 +11,12 @@ import {
 
 type Params = { params: { clinicId: string } };
 
+// GET /api/clinics/:clinicId/appointments
+// ?status=PENDING  ?doctorId=xxx  ?date=YYYY-MM-DD  (all optional)
+// Doctors only see their own appointments
 export const GET = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
@@ -30,15 +30,9 @@ export const GET = withErrorHandler(
     const doctorId = searchParams.get("doctorId");
     const dateStr = searchParams.get("date");
 
-    // Doctors only see their own appointments
+    // Doctors are scoped to their own staffId from the JWT
     const effectiveDoctorId =
-      session.role === "DOCTOR"
-        ? (
-            await prisma.clinicStaff.findUnique({
-              where: { userId: session.id },
-            })
-          )?.id
-        : doctorId || undefined;
+      session.role === "DOCTOR" ? session.staffId : doctorId || undefined;
 
     const appointments = await prisma.appointment.findMany({
       where: {
@@ -49,11 +43,21 @@ export const GET = withErrorHandler(
       },
       include: {
         patient: {
-          include: {
-            user: { select: { name: true, email: true, phone: true } },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            user: { select: { email: true } },
           },
         },
-        doctor: { include: { user: { select: { name: true, email: true } } } },
+        doctor: {
+          select: {
+            id: true,
+            specialization: true,
+            user: { select: { email: true } },
+          },
+        },
         slot: true,
       },
       orderBy: { slot: { startTime: "asc" } },
@@ -63,11 +67,12 @@ export const GET = withErrorHandler(
   },
 );
 
-// Patient books an appointment
+// POST /api/clinics/:clinicId/appointments
+// Patients book. Clinic staff can book on behalf of a patient.
+// Body: { patientId, doctorId, slotId, reason }
 export const POST = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
-    // Patients book. Clinic staff can also book on behalf of a patient.
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, [
       "PATIENT",
       "CLINIC_ADMIN",
@@ -88,7 +93,7 @@ export const POST = withErrorHandler(
     // Patients can only book for themselves
     if (session.role === "PATIENT") {
       const patient = await prisma.patient.findUnique({
-        where: { userId: session.id },
+        where: { userId: session.userId },
       });
       if (patient?.id !== patientId) {
         return NextResponse.json(
@@ -98,20 +103,24 @@ export const POST = withErrorHandler(
       }
     }
 
-    // Use a transaction to atomically check slot + create appointment
+    // Atomically check slot availability and create appointment
     const appointment = await prisma
       .$transaction(async (tx) => {
         const slot = await tx.timeSlot.findUnique({ where: { id: slotId } });
 
-        if (!slot) throw { status: 404, message: "Slot not found" };
-        if (slot.clinicId !== params.clinicId)
+        if (!slot) {
+          throw { status: 404, message: "Slot not found" };
+        }
+        if (slot.clinicId !== params.clinicId) {
           throw { status: 400, message: "Slot does not belong to this clinic" };
-        if (slot.staffId !== doctorId)
+        }
+        if (slot.staffId !== doctorId) {
           throw { status: 400, message: "Slot does not belong to this doctor" };
-        if (slot.status !== "AVAILABLE")
+        }
+        if (slot.status !== "AVAILABLE") {
           throw { status: 409, message: "Slot is no longer available" };
+        }
 
-        // Lock the slot
         await tx.timeSlot.update({
           where: { id: slotId },
           data: { status: "BOOKED" },
@@ -128,16 +137,22 @@ export const POST = withErrorHandler(
           },
           include: {
             slot: true,
-            doctor: { include: { user: { select: { name: true } } } },
+            doctor: {
+              select: {
+                specialization: true,
+                user: { select: { email: true } },
+              },
+            },
           },
         });
       })
       .catch((err) => {
-        if (err.status)
+        if (err.status) {
           throw NextResponse.json(
             { error: err.message },
             { status: err.status },
           );
+        }
         throw err;
       });
 

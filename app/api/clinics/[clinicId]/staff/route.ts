@@ -1,10 +1,6 @@
+// app/api/clinics/[clinicId]/staff/route.ts
 
-// Clinic admin manages all staff (including doctors) from here.
-//
-// GET  /api/clinics/:clinicId/staff            — list all staff
-// POST /api/clinics/:clinicId/staff            — add a user as staff/doctor
-
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -12,17 +8,20 @@ import {
   requireClinicAccess,
   withErrorHandler,
 } from "@/lib/auth";
+import bcrypt from "bcryptjs";
 
 type Params = { params: { clinicId: string } };
 
+// GET /api/clinics/:clinicId/staff
+// GET /api/clinics/:clinicId/staff?role=DOCTOR
 export const GET = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN", "CLINIC_STAFF"]);
     requireClinicAccess(session, params.clinicId);
 
     const { searchParams } = new URL(req.url);
-    const role = searchParams.get("role"); // optional: ?role=DOCTOR
+    const role = searchParams.get("role");
 
     const staff = await prisma.clinicStaff.findMany({
       where: {
@@ -31,24 +30,29 @@ export const GET = withErrorHandler(
         ...(role && { role: role as any }),
       },
       include: {
-        user: { select: { id: true, name: true, email: true, phone: true } },
+        user: { select: { id: true, email: true } },
       },
       orderBy: { createdAt: "asc" },
     });
 
+    // Attach display name from staff record fields (no name on User model)
     return NextResponse.json({ staff });
   },
 );
 
+// POST /api/clinics/:clinicId/staff
+// Creates a new User + ClinicStaff record in one transaction.
+// Body: { email, password, role, specialization?, qualifications?, bio?, consultationFee? }
 export const POST = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN"]);
     requireClinicAccess(session, params.clinicId);
 
     const body = await req.json();
     const {
-      userId,
+      email,
+      password,
       role,
       specialization,
       qualifications,
@@ -56,9 +60,9 @@ export const POST = withErrorHandler(
       consultationFee,
     } = body;
 
-    if (!userId || !role) {
+    if (!email || !password || !role) {
       return NextResponse.json(
-        { error: "userId and role are required" },
+        { error: "email, password, and role are required" },
         { status: 400 },
       );
     }
@@ -73,44 +77,43 @@ export const POST = withErrorHandler(
 
     if (role === "DOCTOR" && !specialization) {
       return NextResponse.json(
-        { error: "specialization is required for doctors" },
+        { error: "specialization is required for DOCTOR role" },
         { status: 400 },
       );
     }
 
-    // Check user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user)
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-    // Prevent duplicate staff entry
-    const existing = await prisma.clinicStaff.findUnique({ where: { userId } });
-    if (existing) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
       return NextResponse.json(
-        { error: "This user is already assigned to a clinic" },
+        { error: "A user with this email already exists" },
         { status: 409 },
       );
     }
 
-    const staff = await prisma.clinicStaff.create({
-      data: {
-        userId,
-        clinicId: params.clinicId,
-        role,
-        ...(role === "DOCTOR" && {
-          specialization,
-          qualifications,
-          bio,
-          consultationFee,
-        }),
-      },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-      },
-    });
+    const passwordHash = await bcrypt.hash(password, 12);
 
-    // Update the User's role field to match
-    await prisma.user.update({ where: { id: userId }, data: { role } });
+    const staff = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { email, passwordHash, role },
+      });
+
+      return tx.clinicStaff.create({
+        data: {
+          userId: user.id,
+          clinicId: params.clinicId,
+          role,
+          ...(role === "DOCTOR" && {
+            specialization,
+            qualifications,
+            bio,
+            consultationFee,
+          }),
+        },
+        include: {
+          user: { select: { id: true, email: true } },
+        },
+      });
+    });
 
     return NextResponse.json({ staff }, { status: 201 });
   },

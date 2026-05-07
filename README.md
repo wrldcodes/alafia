@@ -178,7 +178,7 @@ The MVP uses **local React state** via `useState` and custom hooks. For producti
 
 - **Server/remote state**: React Query or SWR for data fetching and caching
 - **Global UI state**: Zustand or Jotai
-- **Authentication**: NextAuth.js with JWT sessions, separate strategies for patients vs clinic admins
+- **Authentication**: NJwt based authentication, separate strategies for patients vs clinic admins
 - **Database**: PostgreSQL with Prisma ORM (schema to be added)
 
 ### Component Architecture

@@ -1,84 +1,65 @@
-import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcrypt";
-import { prisma } from "@/lib/prisma";
-import { cookieName, signToken } from "@/lib/auth";
-import { loginSchema } from "@/lib/validations";
+// app/api/auth/login/route.ts
+// Works for all roles: PATIENT, CLINIC_ADMIN, CLINIC_STAFF, DOCTOR, SUPER_ADMIN
+// JWT now carries clinicId + staffId so downstream routes don't need extra lookups
 
-export async function GET() {
-  return NextResponse.json({ message: "Login endpoint" });
-}
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { signToken, buildSessionPayload, cookieName } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  let body: unknown;
-
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+    const { email, password } = await req.json();
 
-  const parsed = loginSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 },
-    );
-  }
-
-  const { email, password } = parsed.data;
-  const normalizedEmail = email.toLowerCase().trim();
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-
-    if (!user) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: "Email and password are required" },
+        { status: 400 },
+      );
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return NextResponse.json(
+        { error: "Invalid email or password" },
         { status: 401 },
       );
     }
 
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
-    if (!validPassword) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
-    }
+    // Build full session payload (includes clinicId, staffId where relevant)
+    const payload = await buildSessionPayload(user.id);
+    const token = await signToken(payload);
 
-    const token = await signToken({
-      userId: user.id,
-      email: user.email,
+    // Redirect path per role
+    const dashboardMap: Record<string, string> = {
+      SUPER_ADMIN: "/dashboard/admin",
+      CLINIC_ADMIN: "/dashboard/clinic",
+      CLINIC_STAFF: "/dashboard/staff",
+      DOCTOR: "/dashboard/doctor",
+      PATIENT: "/dashboard/patient",
+    };
+
+    const response = NextResponse.json({
+      message: "Login successful",
       role: user.role,
+      redirectTo: dashboardMap[user.role] ?? "/dashboard",
     });
 
-    const res = NextResponse.json({
-      user: { id: user.id, email: user.email, role: user.role },
-    });
-
-    res.cookies.set(cookieName(), token, {
+    response.cookies.set(cookieName(), token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     });
 
-    return res;
+    return response;
   } catch (err) {
-    console.error("[LOGIN ERROR]", err);
+    console.error("[Login Error]", err);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
-}
-
-export async function DELETE() {
-  const res = NextResponse.json({ message: "Logged out" });
-  res.cookies.delete({ name: cookieName(), path: "/" });
-  return res;
 }

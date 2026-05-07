@@ -1,10 +1,10 @@
 // app/api/clinics/[clinicId]/patients/route.ts
-// Clinic staff views and searches patients who have appointments at their clinic.
-// Patients view their own profile via /api/patients/me
+// Clinic staff views patients who have appointments at their clinic.
 //
+// GET /api/clinics/:clinicId/patients
 // GET /api/clinics/:clinicId/patients?search=john&page=1&limit=20
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -16,8 +16,8 @@ import {
 type Params = { params: { clinicId: string } };
 
 export const GET = withErrorHandler(
-  async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth(req);
+  async (req: Request, { params }: Params) => {
+    const session = await requireAuth();
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
@@ -32,37 +32,55 @@ export const GET = withErrorHandler(
     const limit = Math.min(50, parseInt(searchParams.get("limit") || "20"));
     const skip = (page - 1) * limit;
 
-    // Patients who have at least one appointment at this clinic
+    // Search matches against firstName, lastName, email, or phone
+    const searchFilter = search
+      ? {
+          OR: [
+            { firstName: { contains: search, mode: "insensitive" as const } },
+            { lastName: { contains: search, mode: "insensitive" as const } },
+            { phone: { contains: search } },
+            {
+              user: {
+                email: { contains: search, mode: "insensitive" as const },
+              },
+            },
+          ],
+        }
+      : {};
+
+    const baseWhere = {
+      appointments: { some: { clinicId: params.clinicId } },
+      ...searchFilter,
+    };
+
     const [patients, total] = await prisma.$transaction([
       prisma.patient.findMany({
-        where: {
-          appointments: { some: { clinicId: params.clinicId } },
-          ...(search && {
-            user: {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { email: { contains: search, mode: "insensitive" } },
-                { phone: { contains: search } },
-              ],
-            },
-          }),
-        },
-        include: {
-          user: { select: { id: true, name: true, email: true, phone: true } },
+        where: baseWhere,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          dateOfBirth: true,
+          createdAt: true,
+          user: { select: { email: true } },
           _count: { select: { appointments: true } },
         },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
-      prisma.patient.count({
-        where: { appointments: { some: { clinicId: params.clinicId } } },
-      }),
+      prisma.patient.count({ where: baseWhere }),
     ]);
 
     return NextResponse.json({
       patients,
-      pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
     });
   },
 );

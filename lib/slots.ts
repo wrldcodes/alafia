@@ -1,7 +1,4 @@
-
-// Generates TimeSlot records from a doctor's WorkingHours for a given date.
-// Called by the clinic admin via the slots/generate route.
-// Can also be wired to a cron job to auto-generate slots N days ahead.
+// lib/slots.ts
 
 import { prisma } from "@/lib/prisma";
 import { addMinutes, format, parse, isBefore, isEqual } from "date-fns";
@@ -9,8 +6,8 @@ import { addMinutes, format, parse, isBefore, isEqual } from "date-fns";
 export async function generateSlotsForStaff(
   staffId: string,
   clinicId: string,
-  date: Date, // the calendar date to generate for
-  slotDuration = 30, // minutes per slot
+  date: Date,
+  slotDuration = 30,
 ): Promise<{ generated: number; message?: string }> {
   const dayOfWeek = date.getDay(); // 0 Sun … 6 Sat
 
@@ -22,17 +19,17 @@ export async function generateSlotsForStaff(
     return { generated: 0, message: "No active schedule for this day" };
   }
 
-  // Avoid regenerating if slots already exist for this date
-  const dateOnly = new Date(format(date, "yyyy-MM-dd"));
-  const existingCount = await prisma.timeSlot.count({
+  const dateStr = format(date, "yyyy-MM-dd");
+  const dateOnly = new Date(dateStr); // midnight — used for the @db.Date field
+
+  // Prevent duplicates
+  const existing = await prisma.timeSlot.count({
     where: { staffId, date: dateOnly },
   });
-  if (existingCount > 0) {
+  if (existing > 0) {
     return { generated: 0, message: "Slots already exist for this date" };
   }
 
-  // Build slot list from startTime → endTime in slotDuration increments
-  const dateStr = format(date, "yyyy-MM-dd");
   let cursor = parse(
     `${dateStr} ${workingDay.startTime}`,
     "yyyy-MM-dd HH:mm",
@@ -77,7 +74,7 @@ export async function generateSlotsForStaff(
   return { generated: slots.length };
 }
 
-// Bulk generate for a date range (e.g. next 30 days). Useful for cron.
+// Bulk generate for a date range e.g. next 30 days (for cron job)
 export async function generateSlotsForRange(
   staffId: string,
   clinicId: string,
@@ -96,7 +93,8 @@ export async function generateSlotsForRange(
       slotDuration,
     );
     results.push({ date: format(current, "yyyy-MM-dd"), ...result });
-    current = addMinutes(current, 60 * 24); // next day
+    // advance one day
+    current = addMinutes(current, 60 * 24);
   }
 
   return results;
