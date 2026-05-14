@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   if (
     session &&
     CLINIC_ONLY.some((p) => pathname.startsWith(p)) &&
-    session.role !== "CLINIC"
+    session.role !== "CLINIC_ADMIN"
   ) {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }

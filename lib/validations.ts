@@ -1,8 +1,6 @@
-
 import { z } from "zod";
 
-export const roleSchema = z.enum(["PATIENT", "CLINIC"]);
-
+export const roleSchema = z.enum(["PATIENT", "CLINIC_ADMIN"]);
 
 export const loginSchema = z.object({
   email: z.string().email(),

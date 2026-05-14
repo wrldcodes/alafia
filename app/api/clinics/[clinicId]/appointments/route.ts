@@ -16,14 +16,14 @@ type Params = { params: { clinicId: string } };
 // Doctors only see their own appointments
 export const GET = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
       "CLINIC_STAFF",
       "DOCTOR",
     ]);
-    requireClinicAccess(session, params.clinicId);
+    await requireClinicAccess(session, params.clinicId);
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -47,7 +47,6 @@ export const GET = withErrorHandler(
             id: true,
             firstName: true,
             lastName: true,
-            phone: true,
             user: { select: { email: true } },
           },
         },
@@ -72,7 +71,7 @@ export const GET = withErrorHandler(
 // Body: { patientId, doctorId, slotId, reason }
 export const POST = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     requireRole(session, [
       "PATIENT",
       "CLINIC_ADMIN",

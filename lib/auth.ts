@@ -1,11 +1,11 @@
+// lib/auth.ts
+
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "accessToken";
-
-// ─── Types ────────────────────────────────────────────────────────────────
 
 export type Role =
   | "SUPER_ADMIN"
@@ -18,14 +18,9 @@ export type SessionUser = {
   userId: string;
   email: string;
   role: Role;
-  // Populated for all clinic roles (CLINIC_ADMIN, CLINIC_STAFF, DOCTOR)
-  // so routes can scope queries without an extra DB lookup
   clinicId?: string;
-  // For DOCTOR role: their ClinicStaff.id (used to filter their appointments)
   staffId?: string;
 };
-
-// ─── JWT helpers ──────────────────────────────────────────────────────────
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
@@ -41,11 +36,8 @@ export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
     const decoded = jwt.verify(token, getJwtSecret());
     if (typeof decoded === "string") return null;
-
     const payload = decoded as JwtPayload & Partial<SessionUser>;
-
     if (!payload.userId || !payload.email || !payload.role) return null;
-
     return {
       userId: payload.userId,
       email: payload.email,
@@ -58,57 +50,150 @@ export async function verifyToken(token: string): Promise<SessionUser | null> {
   }
 }
 
-// ─── Session ──────────────────────────────────────────────────────────────
+// Checks Bearer header first, then cookie.
+export async function getSession(
+  req?: Request | NextRequest,
+): Promise<SessionUser | null> {
+  if (req) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const bearerToken = authHeader.slice(7).trim();
+      if (bearerToken) {
+        const session = await verifyToken(bearerToken);
+        if (session) return session;
+      }
+    }
+  }
 
-export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  return await verifyToken(token);
+  const cookieToken = cookieStore.get(COOKIE_NAME)?.value;
+  if (cookieToken) return await verifyToken(cookieToken);
+
+  return null;
 }
 
 export function cookieName() {
   return COOKIE_NAME;
 }
 
-// ─── Guards ───────────────────────────────────────────────────────────────
-// All guards THROW a NextResponse on failure.
-// Wrap your route handler with withErrorHandler() to catch them cleanly.
+export async function buildSessionPayload(
+  userId: string,
+): Promise<SessionUser> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      clinic: { select: { id: true } },
+      clinicStaff: { select: { id: true, clinicId: true } },
+    },
+  });
 
-// Reads session from cookie. Throws 401 if not authenticated.
-export async function requireAuth(): Promise<SessionUser> {
-  const session = await getSession();
+  if (!user) throw new Error("User not found");
+
+  const base: SessionUser = {
+    userId: user.id,
+    email: user.email,
+    role: user.role as Role,
+  };
+
+  if (user.role === "CLINIC_ADMIN" && user.clinic) {
+    return { ...base, clinicId: user.clinic.id };
+  }
+
+  if (
+    (user.role === "CLINIC_STAFF" || user.role === "DOCTOR") &&
+    user.clinicStaff
+  ) {
+    return {
+      ...base,
+      clinicId: user.clinicStaff.clinicId,
+      staffId: user.clinicStaff.id,
+    };
+  }
+
+  return base;
+}
+
+export async function requireAuth(
+  req?: Request | NextRequest,
+): Promise<SessionUser> {
+  const session = await getSession(req);
   if (!session) {
     throw NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return session;
 }
 
-// Throws 403 if session role is not in the allowed list.
 export function requireRole(session: SessionUser, roles: Role[]) {
   if (!roles.includes(session.role)) {
     throw NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 }
 
-// Ensures the session user belongs to the target clinic.
-// SUPER_ADMIN bypasses this check.
-export function requireClinicAccess(session: SessionUser, clinicId: string) {
+async function getCurrentClinicId(session: SessionUser) {
+  switch (session.role) {
+    case "SUPER_ADMIN":
+      return null;
+    case "CLINIC_ADMIN": {
+      const clinic = await prisma.clinic.findUnique({
+        where: { userId: session.userId },
+        select: { id: true },
+      });
+
+      return clinic?.id ?? session.clinicId ?? null;
+    }
+    case "CLINIC_STAFF":
+    case "DOCTOR": {
+      const staff = await prisma.clinicStaff.findUnique({
+        where: { userId: session.userId },
+        select: { clinicId: true },
+      });
+
+      return staff?.clinicId ?? session.clinicId ?? null;
+    }
+    default:
+      return session.clinicId ?? null;
+  }
+}
+
+export async function requireClinicAccess(
+  session: SessionUser,
+  clinicId: string,
+) {
   if (session.role === "SUPER_ADMIN") return;
-  if (session.clinicId !== clinicId) {
+
+  const currentClinicId = await getCurrentClinicId(session);
+
+  if (!currentClinicId) {
     throw NextResponse.json(
-      { error: "Access denied to this clinic" },
+      {
+        error: "No clinic associated with this account. Please log in again.",
+        code: "NO_CLINIC_IN_TOKEN",
+      },
+      { status: 403 },
+    );
+  }
+
+  if (currentClinicId !== clinicId) {
+    throw NextResponse.json(
+      {
+        error: "Access denied to this clinic",
+        code: "CLINIC_MISMATCH",
+        debug:
+          process.env.NODE_ENV === "development"
+            ? {
+                tokenClinicId: session.clinicId,
+                currentClinicId,
+                requestedClinicId: clinicId,
+                hint: "Re-login to refresh your token, or check the clinicId in your URL.",
+              }
+            : undefined,
+      },
       { status: 403 },
     );
   }
 }
 
-// ─── Error handler wrapper ────────────────────────────────────────────────
-// Catches thrown NextResponse errors from guards and unexpected errors.
-// Usage:
-//   export const GET = withErrorHandler(async (req, ctx) => { ... })
-
-type RouteHandler = (req: Request, ctx?: any) => Promise<NextResponse>;
+type RouteHandler = (req: NextRequest, ctx?: any) => Promise<NextResponse>;
 
 export function withErrorHandler(handler: RouteHandler): RouteHandler {
   return async (req, ctx) => {
@@ -123,41 +208,4 @@ export function withErrorHandler(handler: RouteHandler): RouteHandler {
       );
     }
   };
-}
-
-// ─── Login helper ─────────────────────────────────────────────────────────
-// Call this in your login route after verifying the password.
-// Fetches clinicId and staffId automatically so the JWT carries them.
-
-export async function buildSessionPayload(
-  userId: string,
-): Promise<SessionUser> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      clinicStaff: { select: { id: true, clinicId: true } },
-      clinic: { select: { id: true } },
-    },
-  });
-
-  if (!user) throw new Error("User not found");
-
-  const base = { userId: user.id, email: user.email, role: user.role as Role };
-
-  // CLINIC_ADMIN who owns the clinic — clinicId comes from Clinic record
-  if (user.role === "CLINIC_ADMIN" && user.clinic) {
-    return { ...base, clinicId: user.clinic.id };
-  }
-
-  // Staff or Doctor — clinicId and staffId come from ClinicStaff record
-  if (user.clinicStaff) {
-    return {
-      ...base,
-      clinicId: user.clinicStaff.clinicId,
-      staffId: user.clinicStaff.id,
-    };
-  }
-
-  // PATIENT or SUPER_ADMIN — no clinic context needed
-  return base;
 }

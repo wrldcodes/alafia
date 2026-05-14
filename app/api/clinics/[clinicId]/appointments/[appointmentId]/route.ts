@@ -14,8 +14,8 @@ type Params = { params: { clinicId: string; appointmentId: string } };
 // GET /api/clinics/:clinicId/appointments/:appointmentId
 export const GET = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
-    requireClinicAccess(session, params.clinicId);
+    const session = await requireAuth(req);
+    await requireClinicAccess(session, params.clinicId);
 
     const appt = await prisma.appointment.findFirst({
       where: { id: params.appointmentId, clinicId: params.clinicId },
@@ -78,8 +78,8 @@ export const GET = withErrorHandler(
 // { "action": "add_notes", "notes": "Follow up in 2 weeks" }
 export const PATCH = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
-    requireClinicAccess(session, params.clinicId);
+    const session = await requireAuth(req);
+    await requireClinicAccess(session, params.clinicId);
 
     const body = await req.json();
     const { action, cancelReason, notes, newSlotId } = body;

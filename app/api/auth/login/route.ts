@@ -1,22 +1,32 @@
 // app/api/auth/login/route.ts
-// Works for all roles: PATIENT, CLINIC_ADMIN, CLINIC_STAFF, DOCTOR, SUPER_ADMIN
-// JWT now carries clinicId + staffId so downstream routes don't need extra lookups
 
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signToken, buildSessionPayload, cookieName } from "@/lib/auth";
 
+const loginSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const parsed = loginSchema.safeParse(body);
 
-    if (!email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        {
+          error: "Validation failed",
+          issues: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
+
+    const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -27,11 +37,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build full session payload (includes clinicId, staffId where relevant)
     const payload = await buildSessionPayload(user.id);
     const token = await signToken(payload);
 
-    // Redirect path per role
     const dashboardMap: Record<string, string> = {
       SUPER_ADMIN: "/dashboard/admin",
       CLINIC_ADMIN: "/dashboard/clinic",
@@ -42,15 +50,23 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       message: "Login successful",
-      role: user.role,
+      token, // ← raw JWT for Bearer auth / Postman
+      user: {
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+        clinicId: payload.clinicId ?? null,
+        staffId: payload.staffId ?? null,
+      },
       redirectTo: dashboardMap[user.role] ?? "/dashboard",
     });
 
+    // Also set httpOnly cookie for browser use
     response.cookies.set(cookieName(), token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
 

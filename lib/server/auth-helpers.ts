@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { signToken, type SessionUser } from "@/lib/auth";
 
-export type UserRole = "PATIENT" | "CLINIC";
+export type UserRole = "PATIENT" | "CLINIC_ADMIN";
 
 export type ClinicRegisterData = {
   clinicName: string;
@@ -58,7 +58,7 @@ export async function createClinicUser(
     data: {
       email,
       passwordHash,
-      role: "CLINIC",
+      role: "CLINIC_ADMIN",
       clinic: {
         create: {
           clinicName: data.clinicName,

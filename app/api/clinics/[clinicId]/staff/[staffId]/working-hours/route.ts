@@ -1,10 +1,6 @@
-// Clinic admin/staff sets and retrieves a doctor's weekly schedule.
-// Doctors do not touch this — the clinic controls availability.
-//
-// GET /api/clinics/:clinicId/staff/:staffId/working-hours
-// PUT /api/clinics/:clinicId/staff/:staffId/working-hours
+// app/api/clinics/[clinicId]/staff/[staffId]/working-hours/route.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -13,21 +9,23 @@ import {
   withErrorHandler,
 } from "@/lib/auth";
 
-type Params = { params: { clinicId: string; staffId: string } };
+type Params = { params: Promise<{ clinicId: string; staffId: string }> };
 
+// GET /api/clinics/:clinicId/staff/:staffId/working-hours
 export const GET = withErrorHandler(
-  async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
+  async (req: NextRequest, { params }: Params) => {
+    const { clinicId, staffId } = await params;
+    const session = await requireAuth(req);
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
       "CLINIC_STAFF",
       "DOCTOR",
     ]);
-    requireClinicAccess(session, params.clinicId);
+    await requireClinicAccess(session, clinicId);
 
     const hours = await prisma.workingHours.findMany({
-      where: { staffId: params.staffId, clinicId: params.clinicId },
+      where: { staffId, clinicId },
       orderBy: { dayOfWeek: "asc" },
     });
 
@@ -35,15 +33,17 @@ export const GET = withErrorHandler(
   },
 );
 
+// PUT /api/clinics/:clinicId/staff/:staffId/working-hours
 // Body: { schedule: [{ dayOfWeek: 1, startTime: "08:00", endTime: "17:00", isActive: true }] }
-// dayOfWeek: 0 = Sunday … 6 = Saturday
 export const PUT = withErrorHandler(
-  async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
+  async (req: NextRequest, { params }: Params) => {
+    const { clinicId, staffId } = await params;
+    const session = await requireAuth(req);
     requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN", "CLINIC_STAFF"]);
-    requireClinicAccess(session, params.clinicId);
+    await requireClinicAccess(session, clinicId);
 
-    const { schedule } = await req.json();
+    const body = await req.json();
+    const { schedule } = body;
 
     if (!Array.isArray(schedule) || schedule.length === 0) {
       return NextResponse.json(
@@ -59,16 +59,28 @@ export const PUT = withErrorHandler(
         entry.dayOfWeek > 6
       ) {
         return NextResponse.json(
-          { error: "dayOfWeek must be 0 (Sun) – 6 (Sat)" },
+          { error: "dayOfWeek must be 0 (Sun) to 6 (Sat)" },
           { status: 400 },
         );
       }
       if (!entry.startTime || !entry.endTime) {
         return NextResponse.json(
-          { error: "startTime and endTime required for each day" },
+          { error: "startTime and endTime are required for each entry" },
           { status: 400 },
         );
       }
+    }
+
+    // Verify this staff member belongs to this clinic
+    const staffMember = await prisma.clinicStaff.findFirst({
+      where: { id: staffId, clinicId },
+    });
+
+    if (!staffMember) {
+      return NextResponse.json(
+        { error: "Staff member not found" },
+        { status: 404 },
+      );
     }
 
     const results = await prisma.$transaction(
@@ -82,7 +94,7 @@ export const PUT = withErrorHandler(
           prisma.workingHours.upsert({
             where: {
               staffId_dayOfWeek: {
-                staffId: params.staffId,
+                staffId,
                 dayOfWeek: entry.dayOfWeek,
               },
             },
@@ -92,8 +104,8 @@ export const PUT = withErrorHandler(
               isActive: entry.isActive ?? true,
             },
             create: {
-              staffId: params.staffId,
-              clinicId: params.clinicId,
+              staffId,
+              clinicId,
               dayOfWeek: entry.dayOfWeek,
               startTime: entry.startTime,
               endTime: entry.endTime,

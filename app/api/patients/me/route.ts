@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole, withErrorHandler } from "@/lib/auth";
 
 export const GET = withErrorHandler(async (req: Request) => {
-  const session = await requireAuth();
+  const session = await requireAuth(req);
   requireRole(session, ["PATIENT"]);
 
   const patient = await prisma.patient.findUnique({
@@ -36,7 +36,7 @@ export const GET = withErrorHandler(async (req: Request) => {
 });
 
 export const PUT = withErrorHandler(async (req: Request) => {
-  const session = await requireAuth();
+  const session = await requireAuth(req);
   requireRole(session, ["PATIENT"]);
 
   const body = await req.json();

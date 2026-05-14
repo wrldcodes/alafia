@@ -17,14 +17,14 @@ type Params = { params: { clinicId: string } };
 
 export const GET = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
       "CLINIC_STAFF",
       "DOCTOR",
     ]);
-    requireClinicAccess(session, params.clinicId);
+    await requireClinicAccess(session, params.clinicId);
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";

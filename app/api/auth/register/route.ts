@@ -8,7 +8,7 @@ import { z } from "zod";
 
 const registerPayloadSchema = z.discriminatedUnion("role", [
   patientRegisterSchema.extend({ role: z.literal("PATIENT") }),
-  clinicRegisterSchema.extend({ role: z.literal("CLINIC") }),
+  clinicRegisterSchema.extend({ role: z.literal("CLINIC_ADMIN") }),
 ]);
 
 export async function POST(req: NextRequest) {
@@ -30,18 +30,33 @@ export async function POST(req: NextRequest) {
   const payload = parsed.data;
   const { email, password } = payload;
   const normalizedEmail = email.toLowerCase().trim();
-  const existing = await prisma.user.findUnique({
-    where: { email: normalizedEmail },
-  });
-  if (existing) {
-    return NextResponse.json(
-      { error: "Email already exists" },
-      { status: 409 },
-    );
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
   try {
+    const existing = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "Email already exists" },
+        { status: 409 },
+      );
+    }
+
+    if (payload.role === "CLINIC_ADMIN" && payload.licenseNumber) {
+      const existingClinic = await prisma.clinic.findFirst({
+        where: { licenseNumber: payload.licenseNumber },
+        select: { id: true },
+      });
+
+      if (existingClinic) {
+        return NextResponse.json(
+          { error: "Clinic already exists" },
+          { status: 409 },
+        );
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
     if (payload.role === "PATIENT") {
       const user = await createPatientUser(normalizedEmail, passwordHash, {
         firstName: payload.firstName,
@@ -56,18 +71,22 @@ export async function POST(req: NextRequest) {
         role: user.role,
       });
 
-      const res = NextResponse.json({
-        data: {
-          user: {
+      const res = NextResponse.json(
+        {
+          data: {
             id: user.id,
-            email: user.email,
-            role: user.role,
-            profile: user.patient,
+            profileId: user.patient?.id ?? null,
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              profile: user.patient,
+            },
           },
+          token,
         },
-        token,
-        status: 201,
-      });
+        { status: 201 },
+      );
       res.cookies.set(cookieName(), token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -90,20 +109,25 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      clinicId: user.clinic?.id,
     });
 
-    const res = NextResponse.json({
-      data: {
-        user: {
+    const res = NextResponse.json(
+      {
+        data: {
           id: user.id,
-          email: user.email,
-          role: user.role,
-          profile: user.clinic,
+          clinicId: user.clinic?.id ?? null,
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            profile: user.clinic,
+          },
         },
+        token,
       },
-      token,
-      status: 201,
-    });
+      { status: 201 },
+    );
     res.cookies.set(cookieName(), token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -115,6 +139,19 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (err) {
     console.error("[REGISTER ERROR]", err);
+
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? String((err as { code?: string }).code)
+        : null;
+
+    if (code === "P1001") {
+      return NextResponse.json(
+        { error: "Database is unreachable" },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },
