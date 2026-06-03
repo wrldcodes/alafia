@@ -4,7 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { signToken, buildSessionPayload, cookieName } from "@/lib/auth";
+import {
+  signToken,
+  buildSessionPayload,
+  cookieName,
+} from "@/lib/validators/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email"),

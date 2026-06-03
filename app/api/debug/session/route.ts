@@ -3,11 +3,11 @@
 // Hit GET /api/debug/session with your cookie to see exactly what's in your JWT
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/validators/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
-  const session = await getSession();
+  const session = await getSession(req);
 
   if (!session) {
     return NextResponse.json(

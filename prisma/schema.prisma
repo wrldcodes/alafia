@@ -69,6 +69,9 @@ model Patient {
   updatedAt   DateTime @default(now()) @updatedAt
 
   appointments Appointment[]
+  medicalRecords  MedicalRecord[]
+  prescriptions   Prescription[]
+  attachments     RecordAttachment[]
 }
 
 // ─── Clinic ───────────────────────────────────────────────────────────────
@@ -91,6 +94,8 @@ model Clinic {
   workingHours WorkingHours[]
   slots        TimeSlot[]
   appointments Appointment[]
+  medicalRecords  MedicalRecord[]
+  attachments     RecordAttachment[]
 }
 
 // ─── ClinicStaff ──────────────────────────────────────────────────────────
@@ -119,6 +124,7 @@ model ClinicStaff {
   workingHours WorkingHours[]
   slots        TimeSlot[]
   appointments Appointment[]
+  medicalRecords  MedicalRecord[]
 
   @@index([clinicId, role])
   @@index([clinicId, isActive])
@@ -195,6 +201,7 @@ model Appointment {
   confirmedAt DateTime?
   cancelledAt DateTime?
   completedAt DateTime?
+  medicalRecord   MedicalRecord?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -203,3 +210,110 @@ model Appointment {
   @@index([patientId])
   @@index([doctorId, status])
 }
+
+// ─── MedicalRecord ────────────────────────────────────────────────────────
+// Created when an appointment is marked COMPLETED.
+// One record per appointment — enforced by @unique on appointmentId.
+// Doctors write it. Patients read their own. Clinic staff can view.
+
+model MedicalRecord {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique          // one record per visit
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  patientId     String
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  clinicId      String
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  doctorId      String                    // ClinicStaff.id
+  doctor        ClinicStaff @relation(fields: [doctorId], references: [id])
+
+  // Clinical content
+  chiefComplaint  String                  // patient's main presenting problem
+  diagnosis       String                  // doctor's diagnosis
+  symptoms        String[]                // array of symptom strings
+  vitalSigns      Json?                   // { bp: "120/80", temp: "37.2", pulse: 72, weight: 70 }
+  assessment      String?                 // doctor's detailed clinical notes
+  plan            String?                 // treatment plan / follow-up instructions
+  followUpDate    DateTime?               // next recommended visit
+
+  prescriptions   Prescription[]
+  attachments     RecordAttachment[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  @@index([patientId])
+  @@index([clinicId])
+  @@index([doctorId])
+}
+
+// ─── Prescription ─────────────────────────────────────────────────────────
+// Issued by doctor as part of a MedicalRecord.
+// One record can have multiple prescriptions (one per drug).
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Prescription {
+  id              String             @id @default(cuid())
+  recordId        String
+  record          MedicalRecord      @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         Patient            @relation(fields: [patientId], references: [id])
+
+  drugName        String
+  dosage          String             // e.g. "500mg"
+  frequency       String             // e.g. "Twice daily"
+  duration        String             // e.g. "7 days"
+  quantity        Int                // total units to dispense
+  instructions    String?            // e.g. "Take after meals"
+  status          PrescriptionStatus @default(ACTIVE)
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+
+  @@index([recordId])
+  @@index([patientId])
+}
+
+// ─── RecordAttachment ─────────────────────────────────────────────────────
+// Cloudinary file metadata stored here.
+// Actual binary is on Cloudinary — we store the reference only.
+
+enum AttachmentType {
+  LAB_RESULT
+  SCAN
+  XRAY
+  PRESCRIPTION_SCAN
+  REFERRAL_LETTER
+  OTHER
+}
+
+model RecordAttachment {
+  id              String         @id @default(cuid())
+  recordId        String
+  record          MedicalRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         Patient        @relation(fields: [patientId], references: [id])
+  clinicId        String
+  clinic          Clinic         @relation(fields: [clinicId], references: [id])
+
+  // Cloudinary metadata
+  cloudinaryId    String         // public_id from Cloudinary
+  url             String         // secure_url from Cloudinary
+  fileName        String         // original file name
+  fileType        String         // MIME type e.g. "application/pdf"
+  fileSize        Int            // bytes
+  attachmentType  AttachmentType @default(OTHER)
+  uploadedById    String         // userId of uploader
+
+  createdAt       DateTime       @default(now())
+
+  @@index([recordId])
+  @@index([patientId])
+}
+
+

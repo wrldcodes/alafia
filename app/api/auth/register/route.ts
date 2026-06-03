@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { patientRegisterSchema, clinicRegisterSchema } from "@/lib/validations";
+import {
+  patientRegisterSchema,
+  clinicRegisterSchema,
+} from "@/lib/validators/validations";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
-import { cookieName, signToken } from "@/lib/auth";
+import { cookieName, signToken } from "@/lib/validators/auth";
 import { createClinicUser, createPatientUser } from "@/lib/server/auth-helpers";
 import { z } from "zod";
 

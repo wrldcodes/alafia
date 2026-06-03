@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookieName, verifyToken } from "@/lib/auth";
+import { cookieName, verifyToken } from "@/lib/validators/auth";
 
 const CLINIC_ONLY = ["/dashboard/clinic", "/api/clinic"];
 const PATIENT_ONLY = ["/dashboard/patient", "/api/patient"];

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { signToken, type SessionUser } from "@/lib/auth";
+import { signToken, type SessionUser } from "@/lib/validators/auth";
 
 export type UserRole = "PATIENT" | "CLINIC_ADMIN";
 

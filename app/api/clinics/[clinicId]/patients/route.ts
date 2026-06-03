@@ -11,7 +11,7 @@ import {
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
+} from "@/lib/validators/auth";
 
 type Params = { params: { clinicId: string } };
 

@@ -15,13 +15,14 @@ import {
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
+} from "@/lib/validators/auth";
 
-type Params = { params: { clinicId: string; staffId: string } };
+type Params = { params: Promise<{ clinicId: string; staffId: string }> };
 
 // List available slots for a given date
 export const GET = withErrorHandler(
   async (req: Request, { params }: Params) => {
+    const { clinicId, staffId } = await params;
     const { searchParams } = new URL(req.url);
     const dateStr = searchParams.get("date");
 
@@ -42,8 +43,8 @@ export const GET = withErrorHandler(
 
     const slots = await prisma.timeSlot.findMany({
       where: {
-        staffId: params.staffId,
-        clinicId: params.clinicId,
+        staffId,
+        clinicId,
         date,
         status: "AVAILABLE",
       },

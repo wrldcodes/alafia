@@ -8,8 +8,11 @@ import {
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
-import { generateSlotsForStaff, generateSlotsForRange } from "@/lib/slots";
+} from "@/lib/validators/auth";
+import {
+  generateSlotsForStaff,
+  generateSlotsForRange,
+} from "@/lib/validators/slots";
 
 type Params = { params: { clinicId: string; staffId: string } };
 

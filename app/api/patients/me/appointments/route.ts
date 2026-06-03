@@ -1,11 +1,6 @@
 // app/api/patients/me/appointments/route.ts
-// Patient views their own appointment history.
-//
-// GET /api/patients/me/appointments
-// GET /api/patients/me/appointments?upcoming=true
-// GET /api/patients/me/appointments?status=CONFIRMED
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
@@ -13,7 +8,7 @@ import {
   withErrorHandler,
 } from "@/lib/validators/auth";
 
-export const GET = withErrorHandler(async (req: Request) => {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAuth(req);
   requireRole(session, ["PATIENT"]);
 
@@ -35,10 +30,12 @@ export const GET = withErrorHandler(async (req: Request) => {
   const appointments = await prisma.appointment.findMany({
     where: {
       patientId: patient.id,
+      // filter by status if provided
       ...(status && { status: status as any }),
+      // upcoming: slot is in the future AND appointment is active
       ...(upcoming && {
-        status: { in: ["PENDING", "CONFIRMED"] },
         slot: { startTime: { gte: new Date() } },
+        status: { in: ["PENDING", "CONFIRMED"] },
       }),
     },
     select: {
@@ -53,7 +50,7 @@ export const GET = withErrorHandler(async (req: Request) => {
       clinic: {
         select: {
           id: true,
-          clinicName: true, // ← clinicName not name
+          clinicName: true,
           address: true,
           phone: true,
         },
@@ -74,7 +71,7 @@ export const GET = withErrorHandler(async (req: Request) => {
       },
     },
     orderBy: {
-      slot: { startTime: upcoming ? "asc" : "desc" },
+      createdAt: upcoming ? "asc" : "desc",
     },
   });
 

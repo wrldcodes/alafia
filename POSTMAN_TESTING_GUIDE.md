@@ -209,6 +209,7 @@ Authorization: Bearer {{TOKEN}}
 GET {{BASE_URL}}/api/clinics/{{CLINIC_ID}}/staff/{{STAFF_ID}}/slots?date=2026-05-10
 Authorization: Bearer {{TOKEN}}
 ```
+all tests passed TILL THIS POINT 
 
 ---
 

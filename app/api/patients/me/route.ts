@@ -6,7 +6,11 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole, withErrorHandler } from "@/lib/auth";
+import {
+  requireAuth,
+  requireRole,
+  withErrorHandler,
+} from "@/lib/validators/auth";
 
 export const GET = withErrorHandler(async (req: Request) => {
   const session = await requireAuth(req);

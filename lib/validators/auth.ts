@@ -63,6 +63,11 @@ export async function getSession(
         if (session) return session;
       }
     }
+
+    if ("cookies" in req) {
+      const cookieToken = req.cookies.get(COOKIE_NAME)?.value;
+      if (cookieToken) return await verifyToken(cookieToken);
+    }
   }
 
   const cookieStore = await cookies();

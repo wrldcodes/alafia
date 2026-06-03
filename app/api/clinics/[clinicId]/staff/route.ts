@@ -7,7 +7,7 @@ import {
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
+} from "@/lib/validators/auth";
 import bcrypt from "bcryptjs";
 
 type Params = { params: { clinicId: string } };

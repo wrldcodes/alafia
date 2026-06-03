@@ -1,24 +1,25 @@
 // app/api/clinics/[clinicId]/appointments/[appointmentId]/route.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
+} from "@/lib/validators/auth";
 
-type Params = { params: { clinicId: string; appointmentId: string } };
+type Params = { params: Promise<{ clinicId: string; appointmentId: string }> };
 
 // GET /api/clinics/:clinicId/appointments/:appointmentId
 export const GET = withErrorHandler(
-  async (req: Request, { params }: Params) => {
+  async (req: NextRequest, { params }: Params) => {
+    const { clinicId, appointmentId } = await params;
     const session = await requireAuth(req);
-    await requireClinicAccess(session, params.clinicId);
+    requireClinicAccess(session, clinicId);
 
     const appt = await prisma.appointment.findFirst({
-      where: { id: params.appointmentId, clinicId: params.clinicId },
+      where: { id: appointmentId, clinicId },
       include: {
         patient: {
           select: {
@@ -48,7 +49,6 @@ export const GET = withErrorHandler(
       );
     }
 
-    // Patients can only view their own appointments
     if (session.role === "PATIENT") {
       const patient = await prisma.patient.findUnique({
         where: { userId: session.userId },
@@ -58,7 +58,6 @@ export const GET = withErrorHandler(
       }
     }
 
-    // Doctors can only view their own appointments
     if (session.role === "DOCTOR" && appt.doctorId !== session.staffId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -68,18 +67,11 @@ export const GET = withErrorHandler(
 );
 
 // PATCH /api/clinics/:clinicId/appointments/:appointmentId
-// Single endpoint for all lifecycle transitions via `action` field.
-//
-// { "action": "confirm" }
-// { "action": "cancel", "cancelReason": "Patient request" }
-// { "action": "complete", "notes": "Prescribed paracetamol" }
-// { "action": "no_show" }
-// { "action": "reschedule", "newSlotId": "clx..." }
-// { "action": "add_notes", "notes": "Follow up in 2 weeks" }
 export const PATCH = withErrorHandler(
-  async (req: Request, { params }: Params) => {
+  async (req: NextRequest, { params }: Params) => {
+    const { clinicId, appointmentId } = await params;
     const session = await requireAuth(req);
-    await requireClinicAccess(session, params.clinicId);
+    requireClinicAccess(session, clinicId);
 
     const body = await req.json();
     const { action, cancelReason, notes, newSlotId } = body;
@@ -91,8 +83,9 @@ export const PATCH = withErrorHandler(
       );
     }
 
+    // Fetch appointment without status filter so we always get it
     const appt = await prisma.appointment.findFirst({
-      where: { id: params.appointmentId, clinicId: params.clinicId },
+      where: { id: appointmentId, clinicId },
       include: { slot: true },
     });
 
@@ -110,25 +103,22 @@ export const PATCH = withErrorHandler(
     ] as const;
 
     switch (action) {
-      // ── confirm ─────────────────────────────────────────────────────────
       case "confirm": {
         requireRole(session, [...clinicRoles]);
         if (appt.status !== "PENDING") {
           return NextResponse.json(
-            { error: "Only PENDING appointments can be confirmed" },
+            { error: `Cannot confirm — appointment status is ${appt.status}` },
             { status: 400 },
           );
         }
         const updated = await prisma.appointment.update({
-          where: { id: appt.id },
+          where: { id: appointmentId }, // no status filter here
           data: { status: "CONFIRMED", confirmedAt: new Date() },
         });
         return NextResponse.json({ appointment: updated });
       }
 
-      // ── cancel ──────────────────────────────────────────────────────────
       case "cancel": {
-        // Patients can cancel their own; clinic staff can cancel any
         if (session.role === "PATIENT") {
           const patient = await prisma.patient.findUnique({
             where: { userId: session.userId },
@@ -142,19 +132,18 @@ export const PATCH = withErrorHandler(
 
         if (["CANCELLED", "COMPLETED"].includes(appt.status)) {
           return NextResponse.json(
-            { error: "This appointment cannot be cancelled" },
+            { error: `Cannot cancel — appointment status is ${appt.status}` },
             { status: 400 },
           );
         }
 
-        // Free the slot back to AVAILABLE
         await prisma.$transaction([
           prisma.timeSlot.update({
             where: { id: appt.slotId },
             data: { status: "AVAILABLE" },
           }),
           prisma.appointment.update({
-            where: { id: appt.id },
+            where: { id: appointmentId },
             data: {
               status: "CANCELLED",
               cancelReason: cancelReason ?? null,
@@ -167,21 +156,19 @@ export const PATCH = withErrorHandler(
         return NextResponse.json({ message: "Appointment cancelled" });
       }
 
-      // ── complete ─────────────────────────────────────────────────────────
       case "complete": {
         requireRole(session, [...clinicRoles, "DOCTOR"]);
         if (appt.status !== "CONFIRMED") {
           return NextResponse.json(
-            { error: "Only CONFIRMED appointments can be marked complete" },
+            { error: `Cannot complete — appointment status is ${appt.status}` },
             { status: 400 },
           );
         }
-        // Doctors can only complete their own appointments
         if (session.role === "DOCTOR" && appt.doctorId !== session.staffId) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
         const updated = await prisma.appointment.update({
-          where: { id: appt.id },
+          where: { id: appointmentId },
           data: {
             status: "COMPLETED",
             completedAt: new Date(),
@@ -191,23 +178,23 @@ export const PATCH = withErrorHandler(
         return NextResponse.json({ appointment: updated });
       }
 
-      // ── no_show ──────────────────────────────────────────────────────────
       case "no_show": {
         requireRole(session, [...clinicRoles]);
         if (appt.status !== "CONFIRMED") {
           return NextResponse.json(
-            { error: "Only CONFIRMED appointments can be marked no-show" },
+            {
+              error: `Cannot mark no-show — appointment status is ${appt.status}`,
+            },
             { status: 400 },
           );
         }
         const updated = await prisma.appointment.update({
-          where: { id: appt.id },
+          where: { id: appointmentId },
           data: { status: "NO_SHOW" },
         });
         return NextResponse.json({ appointment: updated });
       }
 
-      // ── reschedule ───────────────────────────────────────────────────────
       case "reschedule": {
         requireRole(session, [...clinicRoles]);
         if (!newSlotId) {
@@ -218,7 +205,9 @@ export const PATCH = withErrorHandler(
         }
         if (["CANCELLED", "COMPLETED", "NO_SHOW"].includes(appt.status)) {
           return NextResponse.json(
-            { error: "Cannot reschedule a closed appointment" },
+            {
+              error: `Cannot reschedule — appointment status is ${appt.status}`,
+            },
             { status: 400 },
           );
         }
@@ -228,67 +217,54 @@ export const PATCH = withErrorHandler(
             const newSlot = await tx.timeSlot.findUnique({
               where: { id: newSlotId },
             });
-
-            if (!newSlot) {
-              throw { status: 404, message: "New slot not found" };
-            }
-            if (newSlot.clinicId !== params.clinicId) {
+            if (!newSlot) throw { status: 404, message: "New slot not found" };
+            if (newSlot.clinicId !== clinicId)
               throw {
                 status: 400,
                 message: "Slot does not belong to this clinic",
               };
-            }
-            if (newSlot.status !== "AVAILABLE") {
+            if (newSlot.status !== "AVAILABLE")
               throw { status: 409, message: "New slot is no longer available" };
-            }
 
-            // Lock new slot
             await tx.timeSlot.update({
               where: { id: newSlotId },
               data: { status: "BOOKED" },
             });
-
-            // Release old slot
             await tx.timeSlot.update({
               where: { id: appt.slotId },
               data: { status: "AVAILABLE" },
             });
-
-            // Mark old appointment as rescheduled
             await tx.appointment.update({
-              where: { id: appt.id },
+              where: { id: appointmentId },
               data: { status: "RESCHEDULED" },
             });
 
-            // Create the new appointment (confirmed immediately)
             return tx.appointment.create({
               data: {
-                clinicId: appt.clinicId,
+                clinicId,
                 patientId: appt.patientId,
                 doctorId: appt.doctorId,
                 slotId: newSlotId,
                 reason: appt.reason,
                 status: "CONFIRMED",
                 confirmedAt: new Date(),
-                rescheduledFromId: appt.id,
+                rescheduledFromId: appointmentId,
               },
               include: { slot: true },
             });
           })
           .catch((err) => {
-            if (err.status) {
+            if (err.status)
               throw NextResponse.json(
                 { error: err.message },
                 { status: err.status },
               );
-            }
             throw err;
           });
 
         return NextResponse.json({ appointment: newAppt }, { status: 201 });
       }
 
-      // ── add_notes ────────────────────────────────────────────────────────
       case "add_notes": {
         requireRole(session, [...clinicRoles, "DOCTOR"]);
         if (!notes) {
@@ -297,12 +273,11 @@ export const PATCH = withErrorHandler(
             { status: 400 },
           );
         }
-        // Doctors can only add notes to their own appointments
         if (session.role === "DOCTOR" && appt.doctorId !== session.staffId) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
         const updated = await prisma.appointment.update({
-          where: { id: appt.id },
+          where: { id: appointmentId },
           data: { notes },
         });
         return NextResponse.json({ appointment: updated });

@@ -7,15 +7,16 @@ import {
   requireRole,
   requireClinicAccess,
   withErrorHandler,
-} from "@/lib/auth";
+} from "@/lib/validators/auth";
 
-type Params = { params: { clinicId: string } };
+type Params = { params: Promise<{ clinicId: string }> };
 
 // GET /api/clinics/:clinicId/appointments
 // ?status=PENDING  ?doctorId=xxx  ?date=YYYY-MM-DD  (all optional)
 // Doctors only see their own appointments
 export const GET = withErrorHandler(
   async (req: Request, { params }: Params) => {
+    const { clinicId } = await params;
     const session = await requireAuth(req);
     requireRole(session, [
       "SUPER_ADMIN",
@@ -23,7 +24,7 @@ export const GET = withErrorHandler(
       "CLINIC_STAFF",
       "DOCTOR",
     ]);
-    await requireClinicAccess(session, params.clinicId);
+    await requireClinicAccess(session, clinicId);
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -36,7 +37,7 @@ export const GET = withErrorHandler(
 
     const appointments = await prisma.appointment.findMany({
       where: {
-        clinicId: params.clinicId,
+        clinicId,
         ...(status && { status: status as any }),
         ...(effectiveDoctorId && { doctorId: effectiveDoctorId }),
         ...(dateStr && { slot: { date: new Date(dateStr) } }),
@@ -71,6 +72,7 @@ export const GET = withErrorHandler(
 // Body: { patientId, doctorId, slotId, reason }
 export const POST = withErrorHandler(
   async (req: Request, { params }: Params) => {
+    await params;
     const session = await requireAuth(req);
     requireRole(session, [
       "PATIENT",
@@ -110,9 +112,6 @@ export const POST = withErrorHandler(
         if (!slot) {
           throw { status: 404, message: "Slot not found" };
         }
-        if (slot.clinicId !== params.clinicId) {
-          throw { status: 400, message: "Slot does not belong to this clinic" };
-        }
         if (slot.staffId !== doctorId) {
           throw { status: 400, message: "Slot does not belong to this doctor" };
         }
@@ -127,7 +126,7 @@ export const POST = withErrorHandler(
 
         return tx.appointment.create({
           data: {
-            clinicId: params.clinicId,
+            clinicId: slot.clinicId,
             patientId,
             doctorId,
             slotId,
