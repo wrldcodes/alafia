@@ -14,21 +14,22 @@ import {
 import { getSignedUrl, deleteFromCloudinary } from "@/lib/cloudinary";
 
 type Params = {
-  params: {
+  params: Promise<{
     clinicId: string;
     appointmentId: string;
     attachmentId: string;
-  };
+  }>;
 };
 
 // GET → signed download URL (expires in 1 hour)
 export const GET = withErrorHandler(
   async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth();
-    requireClinicAccess(session, params.clinicId);
+    const { clinicId, attachmentId } = await params;
+    const session = await requireAuth(req);
+    requireClinicAccess(session, clinicId);
 
     const attachment = await prisma.recordAttachment.findUnique({
-      where: { id: params.attachmentId },
+      where: { id: attachmentId },
       include: { record: { select: { patientId: true } } },
     });
 
@@ -63,12 +64,13 @@ export const GET = withErrorHandler(
 // DELETE → remove file from Cloudinary + delete DB record
 export const DELETE = withErrorHandler(
   async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth();
+    const { clinicId, attachmentId } = await params;
+    const session = await requireAuth(req);
     requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN", "CLINIC_STAFF"]);
-    requireClinicAccess(session, params.clinicId);
+    requireClinicAccess(session, clinicId);
 
     const attachment = await prisma.recordAttachment.findUnique({
-      where: { id: params.attachmentId },
+      where: { id: attachmentId },
     });
 
     if (!attachment) {
@@ -83,7 +85,7 @@ export const DELETE = withErrorHandler(
 
     // Then remove from DB
     await prisma.recordAttachment.delete({
-      where: { id: params.attachmentId },
+      where: { id: attachmentId },
     });
 
     return NextResponse.json({ message: "Attachment deleted" });

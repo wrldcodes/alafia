@@ -14,16 +14,17 @@ import {
 import { createAttachmentSchema } from "@/lib/validators/medical";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-type Params = { params: { clinicId: string; appointmentId: string } };
+type Params = { params: Promise<{ clinicId: string; appointmentId: string }> };
 
 // GET /api/clinics/:clinicId/appointments/:appointmentId/record/attachments
 export const GET = withErrorHandler(
   async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth();
-    requireClinicAccess(session, params.clinicId);
+    const { clinicId, appointmentId } = await params;
+    const session = await requireAuth(req);
+    requireClinicAccess(session, clinicId);
 
     const record = await prisma.medicalRecord.findUnique({
-      where: { appointmentId: params.appointmentId },
+      where: { appointmentId },
     });
 
     if (!record) {
@@ -68,17 +69,18 @@ export const GET = withErrorHandler(
 // Uploads to Cloudinary then stores metadata in DB.
 export const POST = withErrorHandler(
   async (req: NextRequest, { params }: Params) => {
-    const session = await requireAuth();
+    const { clinicId, appointmentId } = await params;
+    const session = await requireAuth(req);
     requireRole(session, [
       "SUPER_ADMIN",
       "CLINIC_ADMIN",
       "CLINIC_STAFF",
       "DOCTOR",
     ]);
-    requireClinicAccess(session, params.clinicId);
+    requireClinicAccess(session, clinicId);
 
     const record = await prisma.medicalRecord.findUnique({
-      where: { appointmentId: params.appointmentId },
+      where: { appointmentId },
     });
 
     if (!record) {
@@ -146,7 +148,7 @@ export const POST = withErrorHandler(
 
     // Upload to Cloudinary under a clinic-scoped folder
     const uploaded = await uploadToCloudinary(buffer, {
-      folder: `clinic_records/${params.clinicId}`,
+      folder: `clinic_records/${clinicId}`,
       fileName: file.name,
       fileType: file.type,
     });
@@ -156,7 +158,7 @@ export const POST = withErrorHandler(
       data: {
         recordId: record.id,
         patientId: record.patientId,
-        clinicId: params.clinicId,
+        clinicId,
         cloudinaryId: uploaded.cloudinaryId,
         url: uploaded.url,
         fileName: file.name,
