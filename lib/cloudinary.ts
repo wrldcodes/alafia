@@ -28,10 +28,10 @@ if (cloudinaryUrl) {
 export async function uploadToCloudinary(
   fileBuffer: Buffer,
   options: {
-    folder: string;       // e.g. "clinic_records/clx_clinic_id"
+    folder: string; // e.g. "clinic_records/clx_clinic_id"
     fileName: string;
-    fileType: string;     // MIME type
-  }
+    fileType: string; // MIME type
+  },
 ) {
   // Convert buffer to base64 data URI
   const base64 = fileBuffer.toString("base64");
@@ -40,7 +40,7 @@ export async function uploadToCloudinary(
   const result = await cloudinary.uploader.upload(dataUri, {
     folder: options.folder,
     public_id: `${Date.now()}_${options.fileName.replace(/\s+/g, "_")}`,
-    resource_type: "auto",   // handles PDF, images, etc.
+    resource_type: "auto", // handles PDF, images, etc.
     access_mode: "authenticated", // private — requires signed URL to access
   });
 
@@ -58,7 +58,7 @@ export async function uploadToCloudinary(
 
 export function getSignedUrl(
   cloudinaryId: string,
-  expiresInSeconds = 3600
+  expiresInSeconds = 3600,
 ): string {
   return cloudinary.url(cloudinaryId, {
     secure: true,
