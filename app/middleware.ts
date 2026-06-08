@@ -1,36 +1,3 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookieName, verifyToken } from "@/lib/validators/auth";
-
-const CLINIC_ONLY = ["/dashboard/clinic", "/api/clinic"];
-const PATIENT_ONLY = ["/dashboard/patient", "/api/patient"];
-
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const token = req.cookies.get(cookieName())?.value;
-  const session = token ? await verifyToken(token) : null;
-
-  if (
-    !session &&
-    !["/", "/login", "/register"].some((p) => pathname.startsWith(p))
-  ) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  if (
-    session &&
-    CLINIC_ONLY.some((p) => pathname.startsWith(p)) &&
-    session.role !== "CLINIC_ADMIN"
-  ) {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
-
-  if (
-    session &&
-    PATIENT_ONLY.some((p) => pathname.startsWith(p)) &&
-    session.role !== "PATIENT"
-  ) {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
-
-  return NextResponse.next();
-}
+// This file is intentionally left empty.
+// The middleware has been moved to the project root: /middleware.ts
+// Next.js only picks up middleware from the root level.

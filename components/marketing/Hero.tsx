@@ -32,13 +32,13 @@ export function Hero() {
 
         <div className="mt-auto pt-6 sm:pt-0 sm:mt-12 grid grid-cols-2 gap-2.5 sm:gap-3.5 w-full max-w-[760px]">
           <CTACard
-            href="/enroll"
+            href="/register"
             variant="patient"
             title="Book care near you"
             cta="Enroll free"
           />
           <CTACard
-            href="/clinic/signup"
+            href="/register?role=clinic"
             variant="clinic"
             title="Run your clinic smoothly"
             cta="Start free"

@@ -105,10 +105,10 @@ export function Navbar() {
         {/* Desktop CTAs */}
         <div className="hidden lg:flex items-center gap-3">
           <UIButton variant="outline" size="md" asChild>
-            <Link href="/home">Sign in</Link>
+            <Link href="/login">Sign in</Link>
           </UIButton>
           <UIButton variant="linear" size="md" asChild>
-            <Link href="/enroll">Get started</Link>
+            <Link href="/register">Get started</Link>
           </UIButton>
         </div>
 
@@ -175,7 +175,7 @@ export function Navbar() {
               transition={{ delay: 0.3, duration: 0.3 }}
             >
               <Link
-                href="/enroll"
+                href="/register"
                 onClick={() => setIsOpen(false)}
                 className={cn(
                   "flex items-center justify-between w-full px-6 py-4",

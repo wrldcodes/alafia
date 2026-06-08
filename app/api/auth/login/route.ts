@@ -45,11 +45,11 @@ export async function POST(req: NextRequest) {
     const token = await signToken(payload);
 
     const dashboardMap: Record<string, string> = {
-      SUPER_ADMIN: "/dashboard/admin",
-      CLINIC_ADMIN: "/dashboard/clinic",
-      CLINIC_STAFF: "/dashboard/staff",
-      DOCTOR: "/dashboard/doctor",
-      PATIENT: "/dashboard/patient",
+      SUPER_ADMIN: "/clinic",
+      CLINIC_ADMIN: "/clinic",
+      CLINIC_STAFF: "/clinic",
+      DOCTOR: "/doctor",
+      PATIENT: "/patient",
     };
 
     const response = NextResponse.json({
