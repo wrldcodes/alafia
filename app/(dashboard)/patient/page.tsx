@@ -1,172 +1,38 @@
 "use client";
 
 // app/(dashboard)/patient/page.tsx
-// Patient Dashboard — personal health summary
 
 import { usePatientDashboard } from "@/hooks/useDashboard";
-import { format, differenceInDays } from "date-fns";
-import { motion } from "framer-motion";
-import {
-  CalendarCheck,
-  Pill,
-  FileText,
-  Clock,
-  MapPin,
-  ChevronRight,
-  Activity,
-  Stethoscope,
-} from "lucide-react";
+import { format } from "date-fns";
+import { RefreshCw, Calendar, FileText, Pill, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
-const STATUS_COLORS: Record<string, string> = {
-  CONFIRMED: "#22c55e",
-  PENDING:   "#f59e0b",
+const STATUS_STYLE: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
+  CONFIRMED: { bg: "bg-[#E1F5EE]", text: "text-[#085041]", label: "Confirmed" },
+  PENDING: { bg: "bg-[#FAEEDA]", text: "text-[#633806]", label: "Pending" },
+  COMPLETED: { bg: "bg-[#E6F1FB]", text: "text-[#0C447C]", label: "Completed" },
+  CANCELLED: { bg: "bg-[#FCEBEB]", text: "text-[#7A1F1F]", label: "Cancelled" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  CONFIRMED: "Confirmed",
-  PENDING:   "Pending",
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.07, duration: 0.4, ease: "easeOut" },
-  }),
-};
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  accent,
-  index,
-}: {
-  icon: any;
-  label: string;
-  value: string | number;
-  sub?: string;
-  accent: string;
-  index: number;
-}) {
-  return (
-    <motion.div
-      custom={index}
-      initial="hidden"
-      animate="show"
-      variants={fadeUp}
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm"
-    >
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{ background: `radial-gradient(circle at top right, ${accent}, transparent 70%)` }}
-      />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-zinc-400">{label}</p>
-          <p className="mt-1 text-3xl font-bold tracking-tight text-white">{value}</p>
-          {sub && <p className="mt-1 text-xs text-zinc-500">{sub}</p>}
-        </div>
-        <div className="rounded-xl p-2.5" style={{ backgroundColor: `${accent}20` }}>
-          <Icon className="h-5 w-5" style={{ color: accent }} />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-white/5 ${className ?? ""}`} />;
-}
-
-function AppointmentCard({ appt, index }: { appt: any; index: number }) {
-  const color = STATUS_COLORS[appt.status] ?? "#6b7280";
-  const daysUntil = differenceInDays(new Date(appt.slot.date), new Date());
-
-  return (
-    <motion.div
-      custom={index}
-      initial="hidden"
-      animate="show"
-      variants={fadeUp}
-      className="group rounded-xl border border-white/5 bg-white/5 p-4 transition hover:bg-white/10"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <span
-          className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-          style={{ backgroundColor: `${color}20`, color }}
-        >
-          {STATUS_LABELS[appt.status] ?? appt.status}
-        </span>
-        <span className="text-xs text-zinc-500">
-          {daysUntil === 0 ? "Today" : daysUntil === 1 ? "Tomorrow" : `In ${daysUntil} days`}
-        </span>
-      </div>
-
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2 text-sm text-white">
-          <Clock className="h-3.5 w-3.5 text-zinc-500" />
-          {format(new Date(appt.slot.startTime), "EEE d MMM · HH:mm")} –{" "}
-          {format(new Date(appt.slot.endTime), "HH:mm")}
-        </div>
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
-          <Stethoscope className="h-3.5 w-3.5 text-zinc-500" />
-          {appt.doctor.specialization}
-        </div>
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
-          <MapPin className="h-3.5 w-3.5 text-zinc-500" />
-          {appt.clinic.clinicName}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function RecordCard({ record, index }: { record: any; index: number }) {
-  return (
-    <motion.div
-      custom={index}
-      initial="hidden"
-      animate="show"
-      variants={fadeUp}
-      className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3 transition hover:bg-white/10 cursor-pointer"
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20">
-          <FileText className="h-4 w-4 text-blue-400" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-white">{record.diagnosis}</p>
-          <p className="text-xs text-zinc-400">
-            {record.clinic.clinicName} · {format(new Date(record.createdAt), "MMM d, yyyy")}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <p className="text-xs text-zinc-500">{record._count.prescriptions} rx</p>
-          <p className="text-xs text-zinc-500">{record._count.attachments} files</p>
-        </div>
-        <ChevronRight className="h-4 w-4 text-zinc-600 transition group-hover:text-zinc-300" />
-      </div>
-    </motion.div>
-  );
-}
-
-export default function PatientDashboard() {
+export default function PatientDashboardPage() {
   const { data, loading, error, refetch } = usePatientDashboard();
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <p className="text-zinc-400">{error}</p>
+          <p className="text-[13px] text-[var(--color-text-tertiary)] mb-3">
+            {error}
+          </p>
           <button
             onClick={refetch}
-            className="mt-4 rounded-lg bg-purple-500/20 px-4 py-2 text-sm text-purple-400 hover:bg-purple-500/30"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[5px] border border-[var(--color-border-secondary)] text-[11px] text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)] transition-colors"
           >
+            <RefreshCw size={11} />
             Try again
           </button>
         </div>
@@ -175,167 +41,279 @@ export default function PatientDashboard() {
   }
 
   const stats = data?.stats;
-  const nextAppt = data?.lists.nextAppointment;
+  const next = data?.lists.nextAppointment ?? null;
   const upcoming = data?.lists.upcomingAppointments ?? [];
   const records = data?.lists.recentRecords ?? [];
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8 md:px-8">
-
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            My Health
-          </h1>
-          <p className="text-sm text-zinc-400">
-            {format(new Date(), "EEEE, MMMM d yyyy")}
-          </p>
-        </div>
-        <button
-          onClick={refetch}
-          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300 transition hover:bg-white/10"
-        >
-          <Activity className="h-4 w-4" />
-          Refresh
-        </button>
-      </motion.div>
-
-      {/* Next appointment hero banner */}
-      {!loading && nextAppt && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 to-zinc-950 p-6"
-        >
-          <div className="absolute inset-0 opacity-5"
-            style={{ background: "radial-gradient(circle at top right, #22c55e, transparent 60%)" }}
-          />
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-emerald-400">
-                Next Appointment
-              </p>
-              <p className="text-lg font-bold text-white">
-                {nextAppt.clinic.clinicName}
-              </p>
-              <p className="text-sm text-zinc-400">{nextAppt.doctor.specialization}</p>
-              <p className="mt-2 text-xs text-zinc-500">{nextAppt.reason}</p>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* KPI strip */}
+      <div className="flex border-b border-[var(--color-border-tertiary)] flex-shrink-0">
+        {[
+          {
+            label: "Total visits",
+            value: loading ? "—" : (stats?.totalVisits ?? 0),
+            sub: "Completed appointments",
+            icon: Calendar,
+          },
+          {
+            label: "Active prescriptions",
+            value: loading ? "—" : (stats?.activePrescriptions ?? 0),
+            sub: "Current medications",
+            icon: Pill,
+          },
+          {
+            label: "Medical records",
+            value: loading ? "—" : (stats?.totalRecords ?? 0),
+            sub: "Across all clinics",
+            icon: FileText,
+          },
+          {
+            label: "Upcoming",
+            value: loading ? "—" : (stats?.upcomingAppointmentsCount ?? 0),
+            sub: "Booked appointments",
+            icon: Calendar,
+          },
+        ].map((s, i) => (
+          <div
+            key={i}
+            className="flex-1 px-5 py-4 border-r border-[var(--color-border-tertiary)] last:border-r-0"
+          >
+            <div className="text-[10px] text-[var(--color-text-tertiary)] mb-1.5">
+              {s.label}
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-white">
-                {format(new Date(nextAppt.slot.startTime), "HH:mm")}
-              </p>
-              <p className="text-sm text-zinc-400">
-                {format(new Date(nextAppt.slot.date), "EEE, MMM d")}
-              </p>
-              <span
-                className="mt-1 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase"
-                style={{
-                  backgroundColor: `${STATUS_COLORS[nextAppt.status]}20`,
-                  color: STATUS_COLORS[nextAppt.status],
-                }}
+            <div className="text-[30px] font-medium text-[var(--color-text-primary)] leading-none tracking-tight mb-1.5">
+              {s.value}
+            </div>
+            <div className="text-[10px] text-[var(--color-text-tertiary)]">
+              {s.sub}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Next appointment — featured */}
+        <div
+          className="flex flex-col border-r border-[var(--color-border-tertiary)] overflow-hidden flex-shrink-0"
+          style={{ width: 260 }}
+        >
+          <div className="px-5 py-3 border-b border-[var(--color-border-tertiary)] flex-shrink-0">
+            <div className="text-[12px] font-medium text-[var(--color-text-primary)]">
+              Next appointment
+            </div>
+          </div>
+          <div className="flex-1 px-5 py-5">
+            {loading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-3 w-20 rounded bg-[var(--color-background-secondary)]" />
+                <div className="h-5 w-32 rounded bg-[var(--color-background-secondary)]" />
+                <div className="h-2.5 w-28 rounded bg-[var(--color-background-secondary)]" />
+              </div>
+            ) : next ? (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] mb-1">
+                    {format(new Date(next.slot.date), "EEE, MMM d yyyy")}
+                  </div>
+                  <div className="text-[22px] font-medium text-[var(--color-text-primary)] tracking-tight leading-none">
+                    {format(new Date(next.slot.startTime), "h:mm a")}
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-[var(--color-border-tertiary)]">
+                  <div className="text-[12px] font-medium text-[var(--color-text-primary)]">
+                    {next.clinic.clinicName}
+                  </div>
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5">
+                    {next.clinic.address}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-[var(--color-text-secondary)]">
+                    {next.doctor.specialization}
+                  </div>
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5 truncate">
+                    {next.doctor.user.email}
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-[var(--color-border-tertiary)]">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] mb-1">
+                    Reason
+                  </div>
+                  <div className="text-[11px] text-[var(--color-text-primary)]">
+                    {next.reason}
+                  </div>
+                </div>
+                <div
+                  className={cn(
+                    "inline-flex self-start text-[10px] font-semibold px-2 py-1 rounded-[4px]",
+                    STATUS_STYLE[next.status]?.bg,
+                    STATUS_STYLE[next.status]?.text,
+                  )}
+                >
+                  {STATUS_STYLE[next.status]?.label ?? next.status}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-start gap-3 pt-2">
+                <div className="text-[12px] text-[var(--color-text-tertiary)]">
+                  No upcoming appointments
+                </div>
+                <Link
+                  href="/clinics"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#0F6E56] hover:text-[#085041] transition-colors"
+                >
+                  Find a clinic <ArrowRight size={11} aria-hidden="true" />
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* More upcoming */}
+          {upcoming.length > 1 && (
+            <div className="border-t border-[var(--color-border-tertiary)] px-5 py-3 flex-shrink-0">
+              <div className="text-[10px] text-[var(--color-text-tertiary)] mb-2">
+                Also upcoming
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {upcoming.slice(1, 3).map((a) => (
+                  <div key={a.id} className="flex items-center justify-between">
+                    <div className="text-[11px] text-[var(--color-text-primary)]">
+                      {format(new Date(a.slot.startTime), "MMM d · h:mm a")}
+                    </div>
+                    <div
+                      className={cn(
+                        "text-[9px] font-semibold px-1.5 py-0.5 rounded-[3px]",
+                        STATUS_STYLE[a.status]?.bg,
+                        STATUS_STYLE[a.status]?.text,
+                      )}
+                    >
+                      {STATUS_STYLE[a.status]?.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Medical records */}
+        <div className="flex-1 flex flex-col border-r border-[var(--color-border-tertiary)] overflow-hidden">
+          <div className="flex items-baseline justify-between px-5 py-3 border-b border-[var(--color-border-tertiary)] flex-shrink-0">
+            <div className="text-[12px] font-medium text-[var(--color-text-primary)]">
+              Recent records
+            </div>
+            <Link
+              href="/patient/records"
+              className="text-[11px] text-[#0F6E56] hover:text-[#085041] transition-colors"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="flex-1 overflow-auto px-5 py-1">
+            {loading ? (
+              <div className="flex flex-col gap-3 pt-3 animate-pulse">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="h-2.5 w-32 rounded bg-[var(--color-background-secondary)]" />
+                    <div className="h-2 w-48 rounded bg-[var(--color-background-secondary)]" />
+                  </div>
+                ))}
+              </div>
+            ) : records.length === 0 ? (
+              <div className="py-10 text-center text-[12px] text-[var(--color-text-tertiary)]">
+                No medical records yet
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {records.map((r) => (
+                  <div
+                    key={r.id}
+                    className="grid items-start gap-3 py-[9px] border-b border-[var(--color-border-tertiary)] last:border-b-0"
+                    style={{ gridTemplateColumns: "1fr auto" }}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-medium text-[var(--color-text-primary)] truncate">
+                        {r.diagnosis}
+                      </div>
+                      <div className="text-[10px] text-[var(--color-text-tertiary)] truncate mt-0.5">
+                        {r.chiefComplaint}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[10px] text-[var(--color-text-tertiary)]">
+                          {r.clinic.clinicName}
+                        </span>
+                        {r._count.prescriptions > 0 && (
+                          <span className="text-[9px] text-[var(--color-text-tertiary)]">
+                            · {r._count.prescriptions} Rx
+                          </span>
+                        )}
+                        {r._count.attachments > 0 && (
+                          <span className="text-[9px] text-[var(--color-text-tertiary)]">
+                            · {r._count.attachments} files
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] tabular-nums flex-shrink-0">
+                      {format(new Date(r.createdAt), "MMM d")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div
+          className="flex flex-col flex-shrink-0 overflow-hidden"
+          style={{ width: 180 }}
+        >
+          <div className="px-4 py-3 border-b border-[var(--color-border-tertiary)] flex-shrink-0">
+            <div className="text-[11px] font-medium text-[var(--color-text-primary)]">
+              Quick actions
+            </div>
+          </div>
+          <div className="flex-1 p-4 flex flex-col gap-2">
+            {[
+              { label: "Book appointment", href: "/clinics", icon: Calendar },
+              {
+                label: "My prescriptions",
+                href: "/patient/prescriptions",
+                icon: Pill,
+              },
+              {
+                label: "Medical history",
+                href: "/patient/records",
+                icon: FileText,
+              },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="flex items-center justify-between px-3 py-2.5 rounded-[6px] bg-[var(--color-background-secondary)] hover:bg-[var(--color-background-tertiary)] transition-colors group"
               >
-                {STATUS_LABELS[nextAppt.status]}
-              </span>
-            </div>
+                <div className="flex items-center gap-2">
+                  <a.icon
+                    size={12}
+                    className="text-[var(--color-text-tertiary)]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-[11px] text-[var(--color-text-primary)]">
+                    {a.label}
+                  </span>
+                </div>
+                <ArrowRight
+                  size={10}
+                  className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-hidden="true"
+                />
+              </Link>
+            ))}
           </div>
-        </motion.div>
-      )}
-
-      {/* Stat Cards */}
-      {loading ? (
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
-      ) : (
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <StatCard index={0} icon={CalendarCheck} label="Total Visits"
-            value={stats?.totalVisits ?? 0} sub="Completed appointments" accent="#22c55e" />
-          <StatCard index={1} icon={Pill} label="Active Prescriptions"
-            value={stats?.activePrescriptions ?? 0} sub="Current medications" accent="#f59e0b" />
-          <StatCard index={2} icon={CalendarCheck} label="Upcoming"
-            value={stats?.upcomingAppointmentsCount ?? 0} sub="Scheduled appointments" accent="#3b82f6" />
-          <StatCard index={3} icon={FileText} label="Medical Records"
-            value={stats?.totalRecords ?? 0} sub="Visit records" accent="#a78bfa" />
-        </div>
-      )}
-
-      {/* Upcoming appointments + recent records */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-        {/* Upcoming appointments */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
-              Upcoming Appointments
-            </h2>
-            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-              {upcoming.length}
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
-            </div>
-          ) : upcoming.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
-              <CalendarCheck className="h-8 w-8 text-zinc-700" />
-              <p className="text-sm text-zinc-500">No upcoming appointments</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcoming.map((appt, i) => (
-                <AppointmentCard key={appt.id} appt={appt} index={i} />
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Recent medical records */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
-              Recent Records
-            </h2>
-            <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-400">
-              {records.length}
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
-            </div>
-          ) : records.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
-              <FileText className="h-8 w-8 text-zinc-700" />
-              <p className="text-sm text-zinc-500">No medical records yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {records.map((record, i) => (
-                <RecordCard key={record.id} record={record} index={i} />
-              ))}
-            </div>
-          )}
-        </motion.div>
       </div>
     </div>
   );

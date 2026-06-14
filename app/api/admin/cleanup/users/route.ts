@@ -15,6 +15,10 @@ import {
 } from "@/lib/validators/auth";
 
 export const DELETE = withErrorHandler(async (req: Request) => {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const session = await requireAuth(req);
   requireRole(session, ["SUPER_ADMIN"]);
 

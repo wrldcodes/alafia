@@ -1,11 +1,5 @@
-import type { Metadata } from 'next'
-import { ClinicDashboard } from '@/components/clinic'
-
-export const metadata: Metadata = {
-  title: 'Clinic Dashboard',
-  description: 'Manage your patients, appointments, records, and billing.',
-}
+import { redirect } from "next/navigation";
 
 export default function ClinicDashboardPage() {
-  return <ClinicDashboard />
+  redirect("/clinic");
 }

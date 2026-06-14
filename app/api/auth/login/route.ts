@@ -52,9 +52,8 @@ export async function POST(req: NextRequest) {
       PATIENT: "/patient",
     };
 
-    const response = NextResponse.json({
+    const responseBody: Record<string, unknown> = {
       message: "Login successful",
-      token, // ← raw JWT for Bearer auth / Postman
       user: {
         userId: payload.userId,
         email: payload.email,
@@ -62,8 +61,14 @@ export async function POST(req: NextRequest) {
         clinicId: payload.clinicId ?? null,
         staffId: payload.staffId ?? null,
       },
-      redirectTo: dashboardMap[user.role] ?? "/dashboard",
-    });
+      redirectTo: dashboardMap[user.role] ?? "/clinic",
+    };
+
+    if (process.env.NODE_ENV !== "production") {
+      responseBody.token = token;
+    }
+
+    const response = NextResponse.json(responseBody);
 
     // Also set httpOnly cookie for browser use
     response.cookies.set(cookieName(), token, {

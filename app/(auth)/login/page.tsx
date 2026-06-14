@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { asRoute } from "@/lib/routes";
 
 type LoginState = "idle" | "loading" | "error";
 
@@ -185,7 +186,7 @@ export default function LoginPage() {
 
       // Redirect to the role-appropriate dashboard
       const redirectTo: string = data.redirectTo ?? "/clinic";
-      router.push(redirectTo);
+      router.push(asRoute(redirectTo));
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please check your connection.");
@@ -277,7 +278,7 @@ export default function LoginPage() {
         {/* Forgot password row */}
         <div className="flex justify-end -mt-1">
           <Link
-            href="/forgot-password"
+            href={asRoute("/forgot-password")}
             className="text-xs text-teal-600 hover:text-teal-700 no-underline font-medium"
           >
             Forgot password?
@@ -316,7 +317,7 @@ export default function LoginPage() {
       {/* Sign up links */}
       <div className="mt-5 grid grid-cols-2 gap-3">
         <Link
-          href="/register?role=patient"
+          href={asRoute("/register?role=patient")}
           className={cn(
             "flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl",
             "border border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50",
@@ -328,7 +329,7 @@ export default function LoginPage() {
           Patient sign up
         </Link>
         <Link
-          href="/register?role=clinic"
+          href={asRoute("/register?role=clinic")}
           className={cn(
             "flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl",
             "border border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50",

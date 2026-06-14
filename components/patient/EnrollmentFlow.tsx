@@ -662,7 +662,7 @@ function SuccessScreen({
         </div>
         <div className="flex flex-col gap-2.5">
           <Button variant="primary" size="lg" fullWidth asChild>
-            <a href="/dashboard">Go to my health portal</a>
+            <a href="/patient">Go to my health portal</a>
           </Button>
           <Button variant="outline" size="lg" fullWidth asChild>
             <a href="/clinics">Book my first appointment</a>

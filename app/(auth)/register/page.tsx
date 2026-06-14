@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { asRoute } from "@/lib/routes";
 import {
   User,
   Building2,
@@ -321,7 +322,7 @@ export default function RegisterPage() {
 
       // Redirect based on role
       const redirectTo = role === "PATIENT" ? "/patient" : "/clinic";
-      router.push(redirectTo);
+      router.push(asRoute(redirectTo));
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please check your connection.");
@@ -550,9 +551,9 @@ export default function RegisterPage() {
           {/* Terms notice */}
           <p className="text-xs text-slate-400 leading-relaxed">
             By creating an account you agree to our{" "}
-            <Link href="/terms" className="text-teal-600 hover:underline no-underline">Terms of Service</Link>{" "}
+            <Link href={asRoute("/terms")} className="text-teal-600 hover:underline no-underline">Terms of Service</Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-teal-600 hover:underline no-underline">Privacy Policy</Link>.
+            <Link href={asRoute("/privacy")} className="text-teal-600 hover:underline no-underline">Privacy Policy</Link>.
           </p>
 
           {/* Buttons */}
@@ -597,7 +598,7 @@ export default function RegisterPage() {
       {/* Sign in link */}
       <p className="mt-6 text-center text-sm text-slate-500">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-teal-600 hover:text-teal-700 no-underline">
+        <Link href={asRoute("/login")} className="font-medium text-teal-600 hover:text-teal-700 no-underline">
           Sign in
         </Link>
       </p>

@@ -5,3 +5,7 @@ node_modules/
 .tools/
 
 /lib/generated/prisma
+
+# Local test / API response artifacts
+del_*.json
+sa_login.json

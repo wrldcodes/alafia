@@ -45,6 +45,7 @@ export const POST = withErrorHandler(async (req: Request, ctx: Params) => {
   const params = ctx.params instanceof Promise ? await ctx.params : ctx.params;
   const session = await requireAuth(req);
   requireRole(session, ["SUPER_ADMIN", "CLINIC_ADMIN"]);
+  await requireClinicAccess(session, params.clinicId);
 
   const body = await req.json();
   const {

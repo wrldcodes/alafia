@@ -11,6 +11,22 @@
     --button-linear-to: #1e7d63;
     --button-linear-hover-from: #1e7d63;
     --button-linear-hover-to: #0e4e3e;
+
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f8f6;
+    --color-background-tertiary: #edf7f3;
+    --color-text-primary: #12382f;
+    --color-text-secondary: #48635d;
+    --color-text-tertiary: #7a918b;
+    --color-border-primary: #bfd8cf;
+    --color-border-secondary: #d7e7e1;
+    --color-border-tertiary: #e6efeb;
+    --color-accent-primary: #1e7d63;
+    --color-accent-primary-dark: #0e4e3e;
+    --color-accent-primary-soft: #e1f5ee;
+    --color-accent-blue: #378add;
+    --color-accent-amber: #ef9f27;
+    --color-accent-red: #e24b4a;
   }
 }
 
@@ -69,3 +85,28 @@
     animation-delay: 700ms;
   }
 }
+/* Hide scrollbars everywhere but keep scroll functional */
+* {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+}
+*::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari/Opera */
+}
+ 
+/* Dashboard layout root — prevents double scrollbars */
+.dashboard-root {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+ 
+/* Main content area — only this scrolls */
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+ 

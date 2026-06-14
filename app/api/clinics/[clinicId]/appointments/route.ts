@@ -72,7 +72,7 @@ export const GET = withErrorHandler(
 // Body: { patientId, doctorId, slotId, reason }
 export const POST = withErrorHandler(
   async (req: Request, { params }: Params) => {
-    await params;
+    const { clinicId } = await params;
     const session = await requireAuth(req);
     requireRole(session, [
       "PATIENT",
@@ -80,6 +80,10 @@ export const POST = withErrorHandler(
       "CLINIC_STAFF",
       "SUPER_ADMIN",
     ]);
+
+    if (session.role !== "PATIENT") {
+      await requireClinicAccess(session, clinicId);
+    }
 
     const body = await req.json();
     const { patientId, doctorId, slotId, reason } = body;
@@ -111,6 +115,9 @@ export const POST = withErrorHandler(
 
         if (!slot) {
           throw { status: 404, message: "Slot not found" };
+        }
+        if (slot.clinicId !== clinicId) {
+          throw { status: 403, message: "Slot does not belong to this clinic" };
         }
         if (slot.staffId !== doctorId) {
           throw { status: 400, message: "Slot does not belong to this doctor" };

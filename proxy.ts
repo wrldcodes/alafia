@@ -19,11 +19,14 @@ const PUBLIC_PATHS = [
   "/unauthorized",
 ];
 
-// Role-restricted dashboard paths
+// Legacy MVP routes (mock dashboards — still public during migration)
+const LEGACY_PUBLIC_PATHS = ["/enroll", "/signup", "/home", "/dashboard"];
+
+// Role-restricted dashboard paths (matches app/(dashboard)/* URLs)
 const CLINIC_ROLES = ["CLINIC_ADMIN", "CLINIC_STAFF", "SUPER_ADMIN"];
-const CLINIC_PATHS = ["/dashboard/clinic"];
-const PATIENT_PATHS = ["/dashboard/patient"];
-const DOCTOR_PATHS = ["/dashboard/doctor"];
+const CLINIC_PATHS = ["/clinic"];
+const PATIENT_PATHS = ["/patient"];
+const DOCTOR_PATHS = ["/doctor"];
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
@@ -67,9 +70,13 @@ export async function proxy(req: NextRequest) {
 
   if (isStaticOrApi) return NextResponse.next();
 
-  const isPublic = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "/"),
-  );
+  const isPublic =
+    PUBLIC_PATHS.some(
+      (p) => pathname === p || pathname.startsWith(p + "/"),
+    ) ||
+    LEGACY_PUBLIC_PATHS.some(
+      (p) => pathname === p || pathname.startsWith(p + "/"),
+    );
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verifyToken(token) : null;
@@ -82,14 +89,14 @@ export async function proxy(req: NextRequest) {
       pathname.startsWith("/register/"))
   ) {
     const dashboardMap: Record<string, string> = {
-      SUPER_ADMIN: "/dashboard/clinic",
-      CLINIC_ADMIN: "/dashboard/clinic",
-      CLINIC_STAFF: "/dashboard/clinic",
-      DOCTOR: "/dashboard/doctor",
-      PATIENT: "/dashboard/patient",
+      SUPER_ADMIN: "/clinic",
+      CLINIC_ADMIN: "/clinic",
+      CLINIC_STAFF: "/clinic",
+      DOCTOR: "/doctor",
+      PATIENT: "/patient",
     };
     return NextResponse.redirect(
-      new URL(dashboardMap[session.role] ?? "/dashboard/clinic", req.url),
+      new URL(dashboardMap[session.role] ?? "/clinic", req.url),
     );
   }
 

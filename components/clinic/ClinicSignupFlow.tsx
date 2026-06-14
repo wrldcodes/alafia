@@ -255,7 +255,7 @@ export function ClinicSignupFlow() {
           <p className="text-[12px] font-light text-slate-400 mt-4 leading-[1.8]">
             Already registered?{" "}
             <Link
-              href="/dashboard"
+              href="/clinic"
               className="text-teal-600 no-underline hover:underline"
             >
               Sign in to your dashboard
@@ -834,7 +834,7 @@ function ClinicSuccessScreen({
         </div>
         <div className="flex flex-col gap-2.5">
           <Button variant="primary" size="lg" fullWidth asChild>
-            <a href="/dashboard">Go to my clinic dashboard</a>
+            <a href="/clinic">Go to my clinic dashboard</a>
           </Button>
           <Button variant="outline" size="lg" fullWidth asChild>
             <a href="/clinic/team">Invite team members</a>

@@ -5,12 +5,23 @@
 // PUT /api/patients/me
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import {
   requireAuth,
   requireRole,
   withErrorHandler,
 } from "@/lib/validators/auth";
+
+const updatePatientSchema = z.object({
+  firstName: z.string().min(1).max(100).optional(),
+  lastName: z.string().min(1).max(100).optional(),
+  dateOfBirth: z
+    .string()
+    .refine((s) => !Number.isNaN(Date.parse(s)), { message: "Invalid date" })
+    .optional(),
+  phone: z.string().max(20).optional(),
+});
 
 export const GET = withErrorHandler(async (req: Request) => {
   const session = await requireAuth(req);
@@ -43,8 +54,15 @@ export const PUT = withErrorHandler(async (req: Request) => {
   const session = await requireAuth(req);
   requireRole(session, ["PATIENT"]);
 
-  const body = await req.json();
-  const { firstName, lastName, dateOfBirth, phone } = body;
+  const parsed = updatePatientSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", issues: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+
+  const { firstName, lastName, dateOfBirth, phone } = parsed.data;
 
   const patient = await prisma.patient.update({
     where: { userId: session.userId },

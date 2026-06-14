@@ -19,7 +19,17 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAuth(req);
   requireRole(session, ["CLINIC_ADMIN", "SUPER_ADMIN"]);
 
-  const clinicId = session.clinicId!;
+  const clinicId = session.clinicId;
+  if (!clinicId) {
+    return NextResponse.json(
+      {
+        error: "No clinic associated with this account. Please log in again.",
+        code: "NO_CLINIC_IN_TOKEN",
+      },
+      { status: 403 },
+    );
+  }
+
   const now = new Date();
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);

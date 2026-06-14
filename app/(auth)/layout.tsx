@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { asRoute } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: {
@@ -110,7 +111,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Bottom footer */}
         <div className="px-6 py-4 text-center border-t border-sand-200 mt-auto">
           <p className="text-xs text-slate-400">
-            © {new Date().getFullYear()} Aláfíà Health · <Link href="/support" className="hover:text-teal-600 no-underline">Support</Link>
+            © {new Date().getFullYear()} Aláfíà Health · <Link href={asRoute("/support")} className="hover:text-teal-600 no-underline">Support</Link>
           </p>
         </div>
       </div>

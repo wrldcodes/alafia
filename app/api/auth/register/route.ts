@@ -3,7 +3,7 @@ import {
   patientRegisterSchema,
   clinicRegisterSchema,
 } from "@/lib/validators/validations";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { cookieName, signToken } from "@/lib/validators/auth";
 import { createClinicUser, createPatientUser } from "@/lib/server/auth-helpers";
@@ -74,22 +74,23 @@ export async function POST(req: NextRequest) {
         role: user.role,
       });
 
-      const res = NextResponse.json(
-        {
-          data: {
+      const patientBody: Record<string, unknown> = {
+        data: {
+          id: user.id,
+          profileId: user.patient?.id ?? null,
+          user: {
             id: user.id,
-            profileId: user.patient?.id ?? null,
-            user: {
-              id: user.id,
-              email: user.email,
-              role: user.role,
-              profile: user.patient,
-            },
+            email: user.email,
+            role: user.role,
+            profile: user.patient,
           },
-          token,
         },
-        { status: 201 },
-      );
+      };
+      if (process.env.NODE_ENV !== "production") {
+        patientBody.token = token;
+      }
+
+      const res = NextResponse.json(patientBody, { status: 201 });
       res.cookies.set(cookieName(), token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -115,22 +116,23 @@ export async function POST(req: NextRequest) {
       clinicId: user.clinic?.id,
     });
 
-    const res = NextResponse.json(
-      {
-        data: {
+    const clinicBody: Record<string, unknown> = {
+      data: {
+        id: user.id,
+        clinicId: user.clinic?.id ?? null,
+        user: {
           id: user.id,
-          clinicId: user.clinic?.id ?? null,
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            profile: user.clinic,
-          },
+          email: user.email,
+          role: user.role,
+          profile: user.clinic,
         },
-        token,
       },
-      { status: 201 },
-    );
+    };
+    if (process.env.NODE_ENV !== "production") {
+      clinicBody.token = token;
+    }
+
+    const res = NextResponse.json(clinicBody, { status: 201 });
     res.cookies.set(cookieName(), token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
