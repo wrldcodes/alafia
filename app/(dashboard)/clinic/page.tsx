@@ -4,6 +4,8 @@
 
 import {
   type AppointmentStatus,
+  type RecordSummary,
+  type UpcomingAppointment,
   useClinicDashboard,
 } from "@/hooks/useDashboard";
 import StatRow from "@/components/dashboard/StatRow";
@@ -50,7 +52,7 @@ const MOCK_STATS = {
   revenueToday: null,
 };
 
-const MOCK_UPCOMING = [
+const MOCK_UPCOMING: UpcomingAppointment[] = [
   {
     id: "1",
     status: "CONFIRMED",
@@ -61,6 +63,7 @@ const MOCK_UPCOMING = [
       user: { email: "dr.obi@alafia.com" },
     },
     slot: {
+      date: new Date().toISOString(),
       startTime: new Date(new Date().setHours(10, 0, 0)).toISOString(),
       endTime: new Date(new Date().setHours(10, 30, 0)).toISOString(),
       duration: 30,
@@ -76,6 +79,7 @@ const MOCK_UPCOMING = [
       user: { email: "dr.eze@alafia.com" },
     },
     slot: {
+      date: new Date().toISOString(),
       startTime: new Date(new Date().setHours(11, 15, 0)).toISOString(),
       endTime: new Date(new Date().setHours(11, 45, 0)).toISOString(),
       duration: 30,
@@ -95,6 +99,7 @@ const MOCK_UPCOMING = [
       user: { email: "dr.sanwo@alafia.com" },
     },
     slot: {
+      date: new Date().toISOString(),
       startTime: new Date(new Date().setHours(13, 0, 0)).toISOString(),
       endTime: new Date(new Date().setHours(13, 30, 0)).toISOString(),
       duration: 30,
@@ -114,6 +119,7 @@ const MOCK_UPCOMING = [
       user: { email: "dr.adegoke@alafia.com" },
     },
     slot: {
+      date: new Date().toISOString(),
       startTime: new Date(new Date().setHours(9, 0, 0)).toISOString(),
       endTime: new Date(new Date().setHours(9, 30, 0)).toISOString(),
       duration: 30,
@@ -133,6 +139,7 @@ const MOCK_UPCOMING = [
       user: { email: "dr.bello@alafia.com" },
     },
     slot: {
+      date: new Date().toISOString(),
       startTime: new Date(new Date().setHours(14, 30, 0)).toISOString(),
       endTime: new Date(new Date().setHours(15, 0, 0)).toISOString(),
       duration: 30,
@@ -140,14 +147,13 @@ const MOCK_UPCOMING = [
   },
 ];
 
-const MOCK_RECORDS = [
+const MOCK_RECORDS: RecordSummary[] = [
   {
     id: "r1",
     chiefComplaint: "Severe fever and chills",
     diagnosis: "Uncomplicated Malaria — Coartem prescribed",
     createdAt: new Date(new Date().setHours(9, 45, 0)).toISOString(),
-    patient: { firstName: "Emeka", lastName: "Okonkwo" },
-    clinic: { clinicName: "Alafia Lagos Central" },
+    clinic: { id: "c1", clinicName: "Alafia Lagos Central" },
     doctor: {
       specialization: "General Medicine",
       user: { email: "dr.obi@alafia.com" },
@@ -159,8 +165,7 @@ const MOCK_RECORDS = [
     chiefComplaint: "Pregnancy routine scan",
     diagnosis: "Healthy fetus, 24 weeks — multivitamins",
     createdAt: new Date(new Date().setHours(11, 30, 0)).toISOString(),
-    patient: { firstName: "Chioma", lastName: "Eze" },
-    clinic: { clinicName: "Alafia Lagos Central" },
+    clinic: { id: "c1", clinicName: "Alafia Lagos Central" },
     doctor: {
       specialization: "Gynecology",
       user: { email: "dr.eze@alafia.com" },
@@ -172,8 +177,7 @@ const MOCK_RECORDS = [
     chiefComplaint: "Tooth extraction follow-up",
     diagnosis: "Normal healing — pain relief completed",
     createdAt: new Date(new Date().setHours(10, 15, 0)).toISOString(),
-    patient: { firstName: "Olumide", lastName: "Adegoke" },
-    clinic: { clinicName: "Alafia Lagos Central" },
+    clinic: { id: "c1", clinicName: "Alafia Lagos Central" },
     doctor: {
       specialization: "Dentistry",
       user: { email: "dr.adegoke@alafia.com" },
@@ -431,10 +435,7 @@ export default function ClinicDashboardPage() {
             </button>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "4px 24px" }}>
-            <AppointmentList
-              appointments={upcoming as any}
-              loading={isLoading}
-            />
+            <AppointmentList appointments={upcoming} loading={isLoading} />
           </div>
         </div>
 
@@ -479,7 +480,7 @@ export default function ClinicDashboardPage() {
             </button>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "4px 24px" }}>
-            <RecordList records={records as any} loading={isLoading} />
+            <RecordList records={records} loading={isLoading} />
           </div>
         </div>
 

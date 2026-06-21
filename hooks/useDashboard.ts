@@ -32,8 +32,10 @@ function useFetch<T>(url: string): FetchState<T> {
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const json = await res.json();
       setData(json);
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load dashboard data");
+    } catch (e: unknown) {
+      setError(
+        e instanceof Error ? e.message : "Failed to load dashboard data",
+      );
     } finally {
       setLoading(false);
     }
@@ -64,10 +66,10 @@ export type SlotSummary = {
 };
 
 export type PatientSummary = {
-  id: string;
+  id?: string;
   firstName: string;
   lastName: string;
-  phone: string;
+  phone?: string | null;
   dateOfBirth?: string;
 };
 
@@ -105,6 +107,16 @@ export type StatusBreakpoint = {
   count: number;
 };
 
+export type RecordSummary = {
+  id: string;
+  diagnosis: string;
+  chiefComplaint: string;
+  createdAt: string;
+  clinic: Pick<ClinicSummary, "id" | "clinicName">;
+  doctor: DoctorSummary;
+  _count: { prescriptions: number; attachments: number };
+};
+
 // ── Clinic Admin ──────────────────────────────────────────────────────────
 export type ClinicDashboardData = {
   stats: {
@@ -123,6 +135,7 @@ export type ClinicDashboardData = {
   };
   lists: {
     upcomingToday: UpcomingAppointment[];
+    recentRecords: RecordSummary[];
   };
   meta: { generatedAt: string; clinicId: string };
 };
@@ -152,15 +165,7 @@ export type DoctorDashboardData = {
 };
 
 // ── Patient ───────────────────────────────────────────────────────────────
-export type PatientRecord = {
-  id: string;
-  diagnosis: string;
-  chiefComplaint: string;
-  createdAt: string;
-  clinic: ClinicSummary;
-  doctor: DoctorSummary;
-  _count: { prescriptions: number; attachments: number };
-};
+export type PatientRecord = RecordSummary;
 
 export type PatientUpcomingAppointment = {
   id: string;

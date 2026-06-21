@@ -32,10 +32,10 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
-    fetch("/api/debug/session", { credentials: "include" })
+    fetch("/api/auth/session", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.jwt_payload) setSession(data.jwt_payload as SessionUser);
+        if (data?.user) setSession(data.user as SessionUser);
       })
       .catch(() => null);
   }, []);

@@ -5,7 +5,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole, withErrorHandler } from "@/lib/validators/auth";
+import {
+  requireAuth,
+  requireRole,
+  withErrorHandler,
+} from "@/lib/validators/auth";
 import {
   startOfDay,
   endOfDay,
@@ -55,6 +59,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
     // ── Upcoming appointments today (list) ────────────────────────────────
     upcomingToday,
+    recentRecords,
 
     // ── Active doctors count ──────────────────────────────────────────────
     activeDoctors,
@@ -154,6 +159,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
         },
         slot: {
           select: {
+            date: true,
             startTime: true,
             endTime: true,
             duration: true,
@@ -161,6 +167,27 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
         },
       },
       orderBy: { slot: { startTime: "asc" } },
+      take: 10,
+    }),
+
+    prisma.medicalRecord.findMany({
+      where: { clinicId },
+      select: {
+        id: true,
+        chiefComplaint: true,
+        diagnosis: true,
+        createdAt: true,
+        clinic: { select: { id: true, clinicName: true } },
+        doctor: {
+          select: {
+            id: true,
+            specialization: true,
+            user: { select: { email: true } },
+          },
+        },
+        _count: { select: { prescriptions: true, attachments: true } },
+      },
+      orderBy: { createdAt: "desc" },
       take: 10,
     }),
 
@@ -197,7 +224,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   // ── Build 7-day trend data for chart ─────────────────────────────────
   // Create a map of date → count
-  const trendMap: Record<string, { date: string; total: number; completed: number; cancelled: number }> = {};
+  const trendMap: Record<
+    string,
+    { date: string; total: number; completed: number; cancelled: number }
+  > = {};
 
   for (let i = 6; i >= 0; i--) {
     const d = subDays(now, i);
@@ -226,6 +256,11 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     .filter(([, count]) => count > 0)
     .map(([status, count]) => ({ status, count }));
 
+  const serializedRecentRecords = recentRecords.map((record) => ({
+    ...record,
+    createdAt: record.createdAt.toISOString(),
+  }));
+
   return NextResponse.json({
     // Stat cards
     stats: {
@@ -246,6 +281,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     // Lists
     lists: {
       upcomingToday,
+      recentRecords: serializedRecentRecords,
     },
     meta: {
       generatedAt: now.toISOString(),

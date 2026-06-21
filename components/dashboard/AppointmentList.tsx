@@ -9,7 +9,7 @@ type Appointment = {
   id: string;
   status: string;
   reason: string;
-  patient: { firstName: string; lastName: string; phone: string };
+  patient: { firstName: string; lastName: string; phone?: string | null };
   doctor: { specialization: string; user: { email: string } };
   slot: { startTime: string; endTime: string; duration: number };
 };
