@@ -26,8 +26,15 @@ const LABELS: Record<string, string> = {
   RESCHEDULED: "Rescheduled",
 };
 
-// Tooltip reads from payload.payload (the original data object)
-function CustomTooltip({ active, payload }: any) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: {
+    value: number;
+    payload: Item;
+  }[];
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   const item = payload[0];
   const status = item?.payload?.status;

@@ -137,7 +137,7 @@ export default function DoctorDashboardPage() {
         <div className="flex-1 flex flex-col border-r border-[var(--color-border-tertiary)] overflow-hidden">
           <div className="flex items-baseline justify-between px-5 py-3 border-b border-[var(--color-border-tertiary)] flex-shrink-0">
             <div className="text-[12px] font-medium text-[var(--color-text-primary)]">
-              Today's schedule
+              {"Today's schedule"}
             </div>
             <span className="text-[10px] text-[var(--color-text-tertiary)]">
               {schedule.length} appointments
@@ -269,7 +269,7 @@ export default function DoctorDashboardPage() {
           {/* Status breakdown */}
           <div className="flex-1 p-4 overflow-auto">
             <div className="text-[11px] font-medium text-[var(--color-text-primary)] mb-3">
-              Today's breakdown
+              {"Today's breakdown"}
             </div>
             <div className="flex flex-col">
               {Object.entries(STATUS_STYLE).map(([key, s]) => (

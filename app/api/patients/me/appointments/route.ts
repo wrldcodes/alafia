@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AppointmentStatus } from "@prisma/client";
 import {
   requireAuth,
   requireRole,
@@ -31,7 +32,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     where: {
       patientId: patient.id,
       // filter by status if provided
-      ...(status && { status: status as any }),
+      ...(status && { status: status as AppointmentStatus }),
       // upcoming: slot is in the future AND appointment is active
       ...(upcoming && {
         slot: { startTime: { gte: new Date() } },

@@ -198,9 +198,9 @@ export async function requireClinicAccess(
   }
 }
 
-type RouteHandler = (req: NextRequest, ctx?: any) => Promise<NextResponse>;
-
-export function withErrorHandler(handler: RouteHandler): RouteHandler {
+export function withErrorHandler<T = unknown>(
+  handler: (req: NextRequest, ctx: T) => Promise<NextResponse>,
+): (req: NextRequest, ctx: T) => Promise<NextResponse> {
   return async (req, ctx) => {
     try {
       return await handler(req, ctx);

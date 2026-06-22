@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { ArrowRight, Check, User, Building2 } from "lucide-react";
 import { useGsapReveal } from "@/hooks/useGsapReveal";
 
@@ -36,8 +35,7 @@ export function TwoAudiences() {
           data-reveal="up"
           className="text-[17px] font-light text-slate-400 leading-[1.75] max-w-[500px]"
         >
-          Whether you're a patient in a rural community or a clinic serving
-          hundreds — Aláfíà was built with you in mind.
+          {"Whether you're a patient in a rural community or a clinic serving hundreds — Aláfíà was built with you in mind."}
         </p>
       </div>
 

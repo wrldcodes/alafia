@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, Bell, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type Props = {
   sidebarOpen: boolean;

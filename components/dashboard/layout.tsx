@@ -16,7 +16,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Persist sidebar state across page loads
   useEffect(() => {
     const saved = localStorage.getItem(SIDEBAR_KEY);
-    if (saved !== null) setOpen(saved === "true");
+    if (saved !== null) {
+      const openVal = saved === "true";
+      const id = setTimeout(() => {
+        setOpen(openVal);
+      }, 0);
+      return () => clearTimeout(id);
+    }
   }, []);
 
   const toggle = () => {

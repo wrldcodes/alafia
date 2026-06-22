@@ -178,7 +178,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 // ── Views ──
-function OverviewView({ onPatientClick }: { onPatientClick: (p: any) => void }) {
+function OverviewView({ onPatientClick }: { onPatientClick: (p: typeof PATIENTS[number]) => void }) {
   const appts = [
     { name:'Amaka Obi',     time:'9:00 AM',  doctor:'Dr. Bello',   type:'General',   status:'confirmed' as const },
     { name:'Tunde Fashola', time:'10:30 AM', doctor:'Dr. Adeyemi', type:'Follow-up', status:'pending' as const },
@@ -204,7 +204,7 @@ function OverviewView({ onPatientClick }: { onPatientClick: (p: any) => void }) 
       <div className="grid gap-4" style={{gridTemplateColumns:'1.6fr 1fr'}}>
         <div className="bg-white border border-sand-200 rounded-[18px] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-sand-100">
-            <p className="text-[14px] font-semibold text-slate-800">Today's appointments</p>
+            <p className="text-[14px] font-semibold text-slate-800">{"Today's appointments"}</p>
             <button className="text-[12px] font-medium text-teal-600 bg-none border-none cursor-pointer hover:underline">View all</button>
           </div>
           <table className="w-full border-collapse">
@@ -239,7 +239,7 @@ function OverviewView({ onPatientClick }: { onPatientClick: (p: any) => void }) 
   )
 }
 
-function PatientsView({ patients, onPatientClick }: { patients: typeof PATIENTS; onPatientClick: (p: any) => void }) {
+function PatientsView({ patients, onPatientClick }: { patients: typeof PATIENTS; onPatientClick: (p: typeof PATIENTS[number]) => void }) {
   return (
     <div>
       <div className="flex items-center gap-2.5 mb-5 flex-wrap">
@@ -309,7 +309,7 @@ function AppointmentsView() {
           ].map(([time, cells]) => (
             <>
               <div key={`t-${time}`} className="h-[52px] border-r border-sand-200 px-2 text-[10px] text-slate-300 flex items-start pt-1 justify-end">{time as string}</div>
-              {(cells as any[]).map((cell, i) => (
+              {(cells as ({ t: string; c: string } | null)[]).map((cell, i) => (
                 <div key={i} className="h-[52px] border-r border-sand-100 border-b border-sand-100 p-0.5 last:border-r-0">
                   {cell && (cell.t as string).split('\n').map((ev: string) => (
                     <div key={ev} className={`rounded-[5px] px-1.5 py-0.5 text-[10px] font-medium mb-0.5 cursor-pointer ${cell.c==='teal'?'bg-teal-100 text-teal-800':cell.c==='amber'?'bg-amber-100 text-amber-700':'bg-blue-100 text-blue-600'}`}>{ev}</div>

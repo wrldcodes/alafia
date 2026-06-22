@@ -12,7 +12,6 @@ import {
 } from "@/components/ui";
 import { useMultiStep } from "@/hooks/useMultiStep";
 import { NIGERIAN_STATES, generatePatientId } from "@/lib/utils";
-import type { Patient } from "@/types";
 
 const STEPS = [
   { title: "Personal details", subtitle: "Name, date of birth, gender" },
@@ -92,7 +91,7 @@ const initial: FormData = {
  * On completion, generates a patient ID and shows success screen.
  */
 export function EnrollmentFlow() {
-  const { currentStep, goNext, goBack, isLast, progressPercent } =
+  const { currentStep, goNext, goBack, isLast } =
     useMultiStep(4);
   const [form, setForm] = useState<FormData>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
@@ -273,7 +272,27 @@ export function EnrollmentFlow() {
 
 // ── Step subcomponents ──
 
-function Step1({ form, errors, set, clearError }: any) {
+interface StepProps {
+  form: FormData;
+  errors: Partial<Record<keyof FormData, string>>;
+}
+interface Step1Props extends StepProps {
+  set: (key: keyof FormData, value: string) => void;
+  clearError: (key: keyof FormData) => void;
+}
+interface Step2Props extends StepProps {
+  set: (key: keyof FormData, value: string) => void;
+  clearError: (key: keyof FormData) => void;
+  stateOptions: { value: string; label: string }[];
+}
+interface Step3Props extends StepProps {
+  set: (key: keyof FormData, value: string) => void;
+}
+interface Step4Props extends StepProps {
+  set: (key: keyof FormData, value: boolean) => void;
+}
+
+function Step1({ form, errors, set, clearError }: Step1Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -357,7 +376,7 @@ function Step1({ form, errors, set, clearError }: any) {
   );
 }
 
-function Step2({ form, errors, set, clearError, stateOptions }: any) {
+function Step2({ form, errors, set, clearError, stateOptions }: Step2Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -436,7 +455,7 @@ function Step2({ form, errors, set, clearError, stateOptions }: any) {
   );
 }
 
-function Step3({ form, errors, set }: any) {
+function Step3({ form, errors, set }: Step3Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -453,36 +472,7 @@ function Step3({ form, errors, set }: any) {
         <p className="text-xs text-red-600 mb-3">{errors.clinicId}</p>
       )}
       <div className="flex flex-col gap-3">
-        {[
-          {
-            id: "gbagada",
-            name: "Gbagada General Hospital",
-            location: "Gbagada, Lagos",
-            hours: "Mon–Sat, 8am–6pm",
-            type: "General practice",
-          },
-          {
-            id: "surulere",
-            name: "Community Health Centre Surulere",
-            location: "Surulere, Lagos",
-            hours: "Mon–Fri, 7am–5pm",
-            type: "Community health",
-          },
-          {
-            id: "kano",
-            name: "Aminu Kano Teaching Hospital",
-            location: "Kano, Kano State",
-            hours: "24 hours",
-            type: "Teaching hospital",
-          },
-          {
-            id: "ekiti",
-            name: "Ekiti State University Teaching Hospital",
-            location: "Ado-Ekiti, Ekiti",
-            hours: "Mon–Sat, 8am–8pm",
-            type: "Specialist care",
-          },
-        ].map((clinic) => (
+        {MOCK_CLINICS.map((clinic) => (
           <div
             key={clinic.id}
             onClick={() => {
@@ -535,7 +525,7 @@ function Step3({ form, errors, set }: any) {
   );
 }
 
-function Step4({ form, errors, set }: any) {
+function Step4({ form, errors, set }: Step4Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -599,8 +589,7 @@ function Step4({ form, errors, set }: any) {
           )}
         </div>
         <p className="text-[13px] font-light text-slate-600 leading-[1.6]">
-          I agree to Aláfíà's Terms of Service and Privacy Policy. I consent to
-          my health information being shared with my selected clinic.
+          {"I agree to Aláfíà's Terms of Service and Privacy Policy. I consent to my health information being shared with my selected clinic."}
         </p>
       </div>
       {errors.consent && (
@@ -624,7 +613,7 @@ function SuccessScreen({
           <Check size={32} className="text-teal-600" strokeWidth={2.5} />
         </div>
         <h2 className="font-display text-[30px] text-teal-900 mb-2.5">
-          You're enrolled!
+          {"You're enrolled!"}
         </h2>
         <p className="text-[15px] font-light text-slate-400 leading-[1.7] mb-8">
           Welcome to Aláfíà, {name}. Your health profile is ready and your
@@ -639,7 +628,7 @@ function SuccessScreen({
               {patientId}
             </p>
             <p className="text-[11px] font-light text-white/40 mt-1">
-              Keep this safe — you'll need it at the clinic
+              {"Keep this safe — you'll need it at the clinic"}
             </p>
           </div>
           <svg

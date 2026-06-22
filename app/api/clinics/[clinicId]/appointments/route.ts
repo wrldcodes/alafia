@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AppointmentStatus } from "@prisma/client";
 import {
   requireAuth,
   requireRole,
@@ -38,7 +39,7 @@ export const GET = withErrorHandler(
     const appointments = await prisma.appointment.findMany({
       where: {
         clinicId,
-        ...(status && { status: status as any }),
+        ...(status && { status: status as AppointmentStatus }),
         ...(effectiveDoctorId && { doctorId: effectiveDoctorId }),
         ...(dateStr && { slot: { date: new Date(dateStr) } }),
       },

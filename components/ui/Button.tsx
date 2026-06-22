@@ -80,8 +80,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     if (asChild && isValidElement(children)) {
       // Clone the child element (e.g., a Next `Link` or `a`) and apply button classes
-      // Do not pass `asChild` down to DOM elements
-      const child = children as any;
+      const child = children as React.ReactElement<{ className?: string; disabled?: boolean }>;
       return cloneElement(child, {
         className: cn(classes, child.props?.className),
         ref,

@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { PrescriptionStatus } from "@prisma/client";
 import {
   requireAuth,
   requireRole,
@@ -33,7 +34,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const prescriptions = await prisma.prescription.findMany({
     where: {
       patientId: patient.id,
-      ...(status && { status: status as any }),
+      ...(status && { status: status as PrescriptionStatus }),
     },
     select: {
       id: true,

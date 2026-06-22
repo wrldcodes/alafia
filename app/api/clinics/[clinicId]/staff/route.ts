@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import {
   requireAuth,
   requireRole,
@@ -27,7 +28,7 @@ export const GET = withErrorHandler(async (req: Request, ctx: Params) => {
     where: {
       clinicId: params.clinicId,
       isActive: true,
-      ...(role && { role: role as any }),
+      ...(role && { role: role as Role }),
     },
     include: {
       user: { select: { id: true, email: true } },

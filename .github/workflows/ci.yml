@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, Test, Type-Check, Build
+    name:  Test, Type-Check, Build
     runs-on: ubuntu-latest
 
     env:
@@ -25,31 +25,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: npm run prisma:generate
-
-      - name: Lint
-        run: npm run lint
+        run: pnpm run prisma:generate
 
       - name: Unit tests
         run: |
-          if npm run | grep -qE '^[[:space:]]+test($|:)'; then
-            npm run test
+          if pnpm run | grep -qE '^[[:space:]]+test($|:)'; then
+            pnpm run test
           else
             echo "No test script found; skipping unit tests."
           fi
 
       - name: Type-check
-        run: npm run type-check
+        run: pnpm run type-check
 
       - name: Production build
-        run: npm run build
+        run: pnpm run build

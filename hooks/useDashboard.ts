@@ -42,7 +42,10 @@ function useFetch<T>(url: string): FetchState<T> {
   }, [url]);
 
   useEffect(() => {
-    run();
+    const id = setTimeout(() => {
+      run();
+    }, 0);
+    return () => clearTimeout(id);
   }, [run]);
 
   return { data, loading, error, refetch: run };

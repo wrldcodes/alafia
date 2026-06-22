@@ -14,7 +14,6 @@ import DonutChart from "@/components/dashboard/DonutChart";
 import AppointmentList from "@/components/dashboard/AppointmentList";
 import RecordList from "@/components/dashboard/RecordList";
 import GlancePanel from "@/components/dashboard/GlancePanel";
-import { RefreshCw } from "lucide-react";
 
 // ── Mock data — always used for charts until real data has values > 0 ────
 const MOCK_TREND = [
@@ -374,7 +373,7 @@ export default function ClinicDashboardPage() {
                 color: "var(--color-text-primary)",
               }}
             >
-              Today's status
+              {"Today's status"}
             </div>
             <div
               style={{

@@ -56,7 +56,7 @@ export function Features() {
           data-reveal="up"
           className="inline-flex items-center gap-1.5 text-[12px] font-medium text-teal-600 tracking-[0.08em] uppercase mb-3.5"
         >
-          What's included
+          {"What's included"}
         </div>
         <h2
           data-reveal="up"

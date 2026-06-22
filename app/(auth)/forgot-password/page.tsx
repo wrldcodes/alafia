@@ -61,8 +61,10 @@ export default function ForgotPasswordPage() {
   // Countdown timer for OTP
   useEffect(() => {
     if (step !== 2) return;
-    setTimer(OTP_SECONDS);
-    setCanResend(false);
+    const timeoutId = setTimeout(() => {
+      setTimer(OTP_SECONDS);
+      setCanResend(false);
+    }, 0);
     const id = setInterval(() => {
       setTimer((t) => {
         if (t <= 1) {
@@ -73,7 +75,10 @@ export default function ForgotPasswordPage() {
         return t - 1;
       });
     }, 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(id);
+    };
   }, [step]);
 
   function formatTimer(s: number) {
@@ -198,8 +203,7 @@ export default function ForgotPasswordPage() {
               Forgot password?
             </h1>
             <p className="text-[12px] text-[#9a9890] mb-6 leading-relaxed">
-              Enter the email linked to your account and we'll send you a reset
-              code.
+              {"Enter the email linked to your account and we'll send you a reset code."}
             </p>
 
             <AnimatePresence>
@@ -288,7 +292,7 @@ export default function ForgotPasswordPage() {
                   {email}
                 </p>
                 <p className="text-[10px] text-[#9a9890]">
-                  Check spam if you don't see it
+                  {"Check spam if you don't see it"}
                 </p>
               </div>
             </div>
@@ -363,8 +367,7 @@ export default function ForgotPasswordPage() {
               Set new password
             </h1>
             <p className="text-[12px] text-[#9a9890] mb-6 leading-relaxed">
-              Choose a strong password. You'll use this to sign in going
-              forward.
+              {"Choose a strong password. You'll use this to sign in going forward."}
             </p>
 
             <AnimatePresence>

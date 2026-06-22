@@ -4,7 +4,7 @@
 // Multi-step registration — step 1: role, step 2: details
 // Single page, URL stays /register, content animates between steps
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,7 +41,7 @@ const SLIDE = {
   exit: { x: -40, opacity: 0 },
 };
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -412,5 +412,17 @@ export default function RegisterPage() {
         )}
       </AnimatePresence>
     </AuthCard>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-teal-600" size={32} />
+      </div>
+    }>
+      <RegisterPageInner />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import {
   Button,
   Input,
@@ -335,7 +335,37 @@ export function ClinicSignupFlow() {
   );
 }
 
-function ClinicStep1({ form, errors, set, clearError, typeOptions }: any) {
+interface ClinicStepProps {
+  form: FormData;
+  errors: Partial<Record<keyof FormData, string>>;
+}
+
+interface ClinicStep1Props extends ClinicStepProps {
+  set: (key: keyof FormData, value: string) => void;
+  clearError: (key: keyof FormData) => void;
+  typeOptions: { value: string; label: string }[];
+}
+
+interface ClinicStep2Props extends ClinicStepProps {
+  set: (key: keyof FormData, value: string) => void;
+  clearError: (key: keyof FormData) => void;
+  stateOptions: { value: string; label: string }[];
+}
+
+interface ClinicStep3Props extends ClinicStepProps {
+  toggleArr: (key: "services" | "insurance" | "languages", value: string) => void;
+}
+
+interface ClinicStep4Props extends ClinicStepProps {
+  set: (key: keyof FormData, value: string) => void;
+  clearError: (key: keyof FormData) => void;
+}
+
+interface ClinicStep5Props extends ClinicStepProps {
+  set: (key: keyof FormData, value: boolean) => void;
+}
+
+function ClinicStep1({ form, errors, set, clearError, typeOptions }: ClinicStep1Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -406,7 +436,7 @@ function ClinicStep1({ form, errors, set, clearError, typeOptions }: any) {
   );
 }
 
-function ClinicStep2({ form, errors, set, clearError, stateOptions }: any) {
+function ClinicStep2({ form, errors, set, clearError, stateOptions }: ClinicStep2Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -502,7 +532,7 @@ function ClinicStep2({ form, errors, set, clearError, stateOptions }: any) {
   );
 }
 
-function ClinicStep3({ form, errors, toggleArr }: any) {
+function ClinicStep3({ form, errors, toggleArr }: ClinicStep3Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -572,7 +602,7 @@ function ClinicStep3({ form, errors, toggleArr }: any) {
   );
 }
 
-function ClinicStep4({ form, errors, set, clearError }: any) {
+function ClinicStep4({ form, errors, set, clearError }: ClinicStep4Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">
@@ -669,7 +699,7 @@ function ClinicStep4({ form, errors, set, clearError }: any) {
   );
 }
 
-function ClinicStep5({ form, errors, set }: any) {
+function ClinicStep5({ form, errors, set }: ClinicStep5Props) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-teal-600 tracking-[0.08em] uppercase mb-1.5">

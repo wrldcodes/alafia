@@ -50,7 +50,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
           <blockquote className="space-y-4">
             <p className="font-display text-3xl lg:text-4xl text-white leading-snug italic">
-              "Healthcare that reaches <span className="text-teal-400">everyone</span>."
+              {"\"Healthcare that reaches "}<span className="text-teal-400">everyone</span>{".\""}
             </p>
            
           </blockquote>

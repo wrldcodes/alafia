@@ -19,7 +19,17 @@ type DataPoint = {
 };
 type Props = { data: DataPoint[]; loading?: boolean };
 
-function CustomTooltip({ active, payload, label }: any) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div
@@ -41,7 +51,7 @@ function CustomTooltip({ active, payload, label }: any) {
       >
         {label}
       </div>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <div
           key={p.name}
           style={{
