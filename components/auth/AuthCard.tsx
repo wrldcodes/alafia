@@ -1,9 +1,9 @@
-// components/auth/AuthCard.tsx
-// Shared card shell used across all auth pages.
-// Uses your actual logo from /alafialogo-transparent.png
+"use client";
 
-import Image from "next/image";
-import Link from "next/link";
+// components/auth/AuthCard.tsx
+//
+// Form card wrapper for auth pages. The split brand panel and page shell
+// live in app/(auth)/layout.tsx — this component is only the card + footer links.
 
 type Props = {
   children: React.ReactNode;
@@ -12,60 +12,28 @@ type Props = {
 
 export function AuthCard({ children, footer }: Props) {
   return (
-    <div className="min-h-screen bg-[#f5f4f0] flex flex-col items-center justify-center px-4 py-12">
-      {/* Your custom logo */}
-      <div className="mb-8">
-        {/* <Image
-          src="/alafialogo-transparent.png"
-          alt="Alafia Health"
-          width={1792}
-          height={817}
-          className="h-10 w-auto object-contain object-center"
-          priority
-        /> */}
-      </div>
-
-      {/* Card */}
-      <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#e8e6e0] shadow-[0_2px_20px_rgba(0,0,0,0.06)] p-8">
+    <div className="w-full">
+      <div
+        className={[
+          "rounded-2xl border p-6 sm:p-8",
+          "bg-white dark:bg-[#1a1a18]",
+          "border-[#e8e6e0] dark:border-[#2c2c2a]",
+          "shadow-[0_2px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_24px_rgba(0,0,0,0.3)]",
+        ].join(" ")}
+      >
         {children}
       </div>
 
-      {/* Footer links */}
       {footer && (
-        <div className="mt-6 text-center text-[11px] text-[#aaa8a0]">
+        <div className="mt-5 text-center text-[11px] text-[#aaa8a0] dark:text-[#555450]">
           {footer}
         </div>
       )}
-
-      {/* Copyright */}
-      <p className="mt-6 text-[11px] text-[#c0bdb5]">
-        © 2026 Aláfíà Health ·{" "}
-        <Link href="/support" className="hover:text-[#888] transition-colors">
-          Support
-        </Link>
-      </p>
     </div>
   );
 }
 
-// ── Logo mark inside card (small, top of form) ────────────────────────────
-// Uses the mark-only version when showing inside the card header
-export function LogoMark() {
-  return (
-    <div className="flex items-center gap-2 mb-7">
-      <Image
-        src="/alafialogo-transparent.png"
-        alt="Alafia"
-        width={512}
-        height={512}
-        className="h-7 w-7 object-contain"
-      />
-     
-    </div>
-  );
-}
-
-// ── Step progress dots ─────────────────────────────────────────────────────
+// ── StepDots ───────────────────────────────────────────────────────────
 export function StepDots({
   total,
   current,
@@ -85,7 +53,7 @@ export function StepDots({
               "h-[3px] rounded-full transition-all duration-300",
               active ? "w-5 bg-[#0F6E56]" : "",
               done ? "w-2 bg-[#9FE1CB]" : "",
-              !active && !done ? "w-2 bg-[#e8e6e0]" : "",
+              !active && !done ? "w-2 bg-[#e8e6e0] dark:bg-[#2c2c2a]" : "",
             ].join(" ")}
           />
         );
@@ -94,21 +62,16 @@ export function StepDots({
   );
 }
 
-// ── Form field wrapper ─────────────────────────────────────────────────────
+// ── Field ──────────────────────────────────────────────────────────────
 type FieldProps = {
-  id: string;
   label: string;
   children: React.ReactNode;
   hint?: React.ReactNode;
 };
-
-export function Field({ id, label, children, hint }: FieldProps) {
+export function Field({ label, children, hint }: FieldProps) {
   return (
     <div className="mb-3">
-      <label
-        htmlFor={id}
-        className="block text-[11px] font-medium text-[#5a5855] mb-1.5"
-      >
+      <label className="block text-[11px] font-medium text-[#5a5855] dark:text-[#888480] mb-1.5">
         {label}
       </label>
       {children}
@@ -117,7 +80,7 @@ export function Field({ id, label, children, hint }: FieldProps) {
   );
 }
 
-// ── Text input with leading icon ───────────────────────────────────────────
+// ── AuthInput ──────────────────────────────────────────────────────────
 type InputProps = {
   icon: React.ReactNode;
   trailing?: React.ReactNode;
@@ -133,22 +96,23 @@ export function AuthInput({
 }: InputProps) {
   return (
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c0bdb5]">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c0bdb5] dark:text-[#555450]">
         {icon}
       </div>
       <input
         {...props}
         className={[
-          "w-full pl-9 pr-9 py-2.5 rounded-lg border text-[12px] text-[#1a1a18] bg-white outline-none transition-all duration-150",
-          "placeholder:text-[#c0bdb5]",
+          "w-full pl-9 pr-9 py-2.5 rounded-lg border text-[12px] outline-none transition-all duration-150",
+          "placeholder:text-[#c0bdb5] dark:placeholder:text-[#555450]",
+          "text-[#1a1a18] dark:text-[#f0ede8]",
           error
-            ? "border-[#E24B4A] bg-[#fff8f8] focus:border-[#E24B4A] focus:ring-2 focus:ring-[#E24B4A]/10"
-            : "border-[#e8e6e0] focus:border-[#0F6E56] focus:ring-2 focus:ring-[#0F6E56]/8",
+            ? "border-[#E24B4A] bg-[#fff8f8] dark:bg-[#2a1818] focus:border-[#E24B4A] focus:ring-2 focus:ring-[#E24B4A]/10"
+            : "border-[#e8e6e0] dark:border-[#2c2c2a] bg-white dark:bg-[#232320] focus:border-[#0F6E56] focus:ring-2 focus:ring-[#0F6E56]/10",
           className ?? "",
         ].join(" ")}
       />
       {trailing && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c0bdb5]">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c0bdb5] dark:text-[#555450]">
           {trailing}
         </div>
       )}
@@ -156,11 +120,10 @@ export function AuthInput({
   );
 }
 
-// ── Primary button ─────────────────────────────────────────────────────────
+// ── AuthButton ─────────────────────────────────────────────────────────
 type BtnProps = {
   loading?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
-
 export function AuthButton({
   loading,
   disabled,
@@ -173,8 +136,7 @@ export function AuthButton({
       {...props}
       disabled={loading || disabled}
       className={[
-        "w-full py-2.5 rounded-lg text-[13px] font-medium flex items-center justify-center gap-2",
-        "transition-all duration-150",
+        "w-full py-2.5 rounded-lg text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-150",
         loading || disabled
           ? "bg-[#b0d4c8] text-white cursor-not-allowed"
           : "bg-[#0F6E56] text-white hover:bg-[#085041] active:scale-[.99]",
@@ -186,7 +148,7 @@ export function AuthButton({
   );
 }
 
-// ── Ghost / secondary button ───────────────────────────────────────────────
+// ── GhostButton ────────────────────────────────────────────────────────
 export function GhostButton({
   children,
   className,
@@ -196,9 +158,10 @@ export function GhostButton({
     <button
       {...props}
       className={[
-        "w-full py-2.5 rounded-lg text-[13px] font-medium flex items-center justify-center gap-2",
-        "border border-[#e8e6e0] text-[#5a5855] bg-transparent",
-        "hover:bg-[#f5f4f0] transition-all duration-150",
+        "w-full py-2.5 rounded-lg text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-150",
+        "border border-[#e8e6e0] dark:border-[#2c2c2a]",
+        "text-[#5a5855] dark:text-[#888480] bg-transparent",
+        "hover:bg-[#f5f4f0] dark:hover:bg-[#232320]",
         className ?? "",
       ].join(" ")}
     >
@@ -207,10 +170,10 @@ export function GhostButton({
   );
 }
 
-// ── Error banner ───────────────────────────────────────────────────────────
+// ── ErrorBanner ────────────────────────────────────────────────────────
 export function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 bg-[#fff5f5] border border-[#fecaca] rounded-lg text-[11px] text-[#b42318] mb-3">
+    <div className="flex items-center gap-2 px-3 py-2.5 bg-[#fff5f5] dark:bg-[#2a1818] border border-[#fecaca] dark:border-[#7a2828] rounded-lg text-[11px] text-[#b42318] dark:text-[#f08080] mb-3">
       <svg
         width="14"
         height="14"
@@ -232,7 +195,7 @@ export function ErrorBanner({ message }: { message: string }) {
   );
 }
 
-// ── Password strength bar ──────────────────────────────────────────────────
+// ── StrengthBar ────────────────────────────────────────────────────────
 export function StrengthBar({ password }: { password: string }) {
   const score = (() => {
     let s = 0;
@@ -242,16 +205,13 @@ export function StrengthBar({ password }: { password: string }) {
     if (/[^A-Za-z0-9]/.test(password)) s++;
     return s;
   })();
-
   const labels = ["Too short", "Weak", "Fair", "Strong", "Very strong"];
   const colors = ["#e8e6e0", "#E24B4A", "#EF9F27", "#0F6E56", "#0a3d2e"];
   const widths = ["0%", "25%", "50%", "75%", "100%"];
-
   if (!password) return null;
-
   return (
-    <div className="mt-1.5">
-      <div className="h-[3px] rounded-full bg-[#e8e6e0] overflow-hidden">
+    <div>
+      <div className="h-[3px] rounded-full bg-[#e8e6e0] dark:bg-[#2c2c2a] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{ width: widths[score], background: colors[score] }}

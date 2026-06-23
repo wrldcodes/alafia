@@ -1,13 +1,14 @@
 "use client";
 
 // app/(auth)/forgot-password/page.tsx
-// 4-step flow:
-//   Step 1 — enter email
-//   Step 2 — enter OTP (frontend only, backend wired in Phase 6)
-//   Step 3 — set new password
-//   Step 4 — success
+// 4-step flow with react-hook-form + zodResolver.
+// Step 1: email — Step 2: OTP — Step 3: new password — Step 4: success
+// Phase 6 will wire real API endpoints. Steps 2-3 use simulated delay now.
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,7 +25,6 @@ import {
 } from "lucide-react";
 import {
   AuthCard,
-  LogoMark,
   StepDots,
   Field,
   AuthInput,
@@ -35,36 +35,69 @@ import {
 } from "@/components/auth/AuthCard";
 import OtpInput from "@/components/auth/OtpInput";
 
+// ── Zod schemas ───────────────────────────────────────────────────────────
+
+const emailSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+});
+
+const passwordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Must contain an uppercase letter")
+      .regex(/[0-9]/, "Must contain a number")
+      .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
+    confirm: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });
+
+type EmailForm = z.infer<typeof emailSchema>;
+type PasswordForm = z.infer<typeof passwordSchema>;
+
 const SLIDE = {
   enter: { x: 32, opacity: 0 },
   center: { x: 0, opacity: 1 },
   exit: { x: -32, opacity: 0 },
 };
 
-const OTP_SECONDS = 600; // 10 minutes
+const OTP_SECONDS = 600;
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
+  const [sentEmail, setSentEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [showCf, setShowCf] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [apiError, setApiError] = useState("");
   const [timer, setTimer] = useState(OTP_SECONDS);
   const [canResend, setCanResend] = useState(false);
 
-  // Countdown timer for OTP
+  // ── Email form ────────────────────────────────────────────────────────
+  const emailForm = useForm<EmailForm>({
+    resolver: zodResolver(emailSchema),
+    mode: "onBlur",
+  });
+
+  // ── Password form ─────────────────────────────────────────────────────
+  const passwordForm = useForm<PasswordForm>({
+    resolver: zodResolver(passwordSchema),
+    mode: "onBlur",
+  });
+
+  const newPassword = passwordForm.watch("password") ?? "";
+
+  // ── OTP countdown ─────────────────────────────────────────────────────
   useEffect(() => {
     if (step !== 2) return;
-    const timeoutId = setTimeout(() => {
-      setTimer(OTP_SECONDS);
-      setCanResend(false);
-    }, 0);
+    setTimer(OTP_SECONDS);
+    setCanResend(false);
     const id = setInterval(() => {
       setTimer((t) => {
         if (t <= 1) {
@@ -75,10 +108,7 @@ export default function ForgotPasswordPage() {
         return t - 1;
       });
     }, 1000);
-    return () => {
-      clearTimeout(timeoutId);
-      clearInterval(id);
-    };
+    return () => clearInterval(id);
   }, [step]);
 
   function formatTimer(s: number) {
@@ -89,51 +119,43 @@ export default function ForgotPasswordPage() {
     return `${m}:${sec}`;
   }
 
-  // Step 1 — send OTP
-  async function handleSendCode(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  // ── Step 1 — send code ────────────────────────────────────────────────
+  async function onSendCode(data: EmailForm) {
+    setApiError("");
     try {
-      // Phase 6 will wire this to a real OTP send endpoint
-      // For now we just simulate a delay and advance
-      await new Promise((r) => setTimeout(r, 800));
+      // Phase 6: POST /api/auth/forgot-password { email: data.email }
+      await new Promise((r) => setTimeout(r, 700));
+      setSentEmail(data.email);
       setStep(2);
     } catch {
-      setError("Failed to send code. Please try again.");
-    } finally {
-      setLoading(false);
+      setApiError("Failed to send code. Please try again.");
     }
   }
 
-  // Step 2 — verify OTP
+  // ── Step 2 — verify OTP ───────────────────────────────────────────────
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    const code = otp.join("");
-    if (code.length < 6) {
-      setError("Please enter all 6 digits.");
+    setApiError("");
+    if (otp.join("").length < 6) {
+      setApiError("Please enter all 6 digits.");
       return;
     }
-    setLoading(true);
     try {
-      // Phase 6: POST /api/auth/verify-otp { email, code }
+      // Phase 6: POST /api/auth/verify-otp { email: sentEmail, code: otp.join("") }
       await new Promise((r) => setTimeout(r, 600));
       setStep(3);
     } catch {
-      setError("Incorrect code. Please try again.");
-    } finally {
-      setLoading(false);
+      setApiError("Incorrect code. Please try again.");
     }
   }
 
-  // Step 2 — resend OTP
+  // ── Resend OTP ────────────────────────────────────────────────────────
   async function handleResend() {
     if (!canResend) return;
     setOtp(["", "", "", "", "", ""]);
-    setTimer(OTP_SECONDS);
     setCanResend(false);
-    // Phase 6: POST /api/auth/resend-otp { email }
+    setTimer(OTP_SECONDS);
+    // Phase 6: POST /api/auth/resend-otp { email: sentEmail }
     await new Promise((r) => setTimeout(r, 400));
     const id = setInterval(() => {
       setTimer((t) => {
@@ -147,36 +169,29 @@ export default function ForgotPasswordPage() {
     }, 1000);
   }
 
-  // Step 3 — reset password
-  async function handleResetPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (password !== confirm) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    setLoading(true);
+  // ── Step 3 — set new password ─────────────────────────────────────────
+  async function onSetPassword() {
+    setApiError("");
     try {
-      // Phase 6: POST /api/auth/reset-password { email, otp, newPassword }
+      // Phase 6: POST /api/auth/reset-password { email, otp, newPassword: data.password }
       await new Promise((r) => setTimeout(r, 700));
       setStep(4);
     } catch {
-      setError("Failed to reset password. Please try again.");
-    } finally {
-      setLoading(false);
+      setApiError("Failed to reset password. Please try again.");
     }
+  }
+
+  // ── Error hint helper ─────────────────────────────────────────────────
+  function err(msg: string | undefined) {
+    return msg ? (
+      <p className="text-[10px] text-[#E24B4A] mt-1">{msg}</p>
+    ) : null;
   }
 
   const otpComplete = otp.every(Boolean);
 
   return (
     <AuthCard>
-      <LogoMark />
-
       <AnimatePresence mode="wait">
         {/* ── Step 1 — enter email ──────────────────────── */}
         {step === 1 && (
@@ -188,52 +203,55 @@ export default function ForgotPasswordPage() {
             exit="exit"
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-2 mb-5">
-              <Link
-                href="/login"
-                className="flex items-center gap-1.5 text-[11px] text-[#9a9890] hover:text-[#1a1a18] transition-colors"
-              >
-                <ArrowLeft size={11} /> Back to sign in
-              </Link>
-            </div>
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 text-[11px] text-[#9a9890] hover:text-[#1a1a18] dark:hover:text-[#f0ede8] transition-colors mb-5"
+            >
+              <ArrowLeft size={11} /> Back to sign in
+            </Link>
 
             <StepDots total={4} current={1} />
 
-            <h1 className="text-[20px] font-medium text-[#1a1a18] tracking-tight mb-1">
+            <h1 className="text-[20px] font-medium text-[#1a1a18] dark:text-[#f0ede8] tracking-tight mb-1">
               Forgot password?
             </h1>
-            <p className="text-[12px] text-[#9a9890] mb-6 leading-relaxed">
-              {"Enter the email linked to your account and we'll send you a reset code."}
+            <p className="text-[12px] text-[#9a9890] dark:text-[#555450] mb-6 leading-relaxed">
+              Enter the email linked to your account and we&apos;ll send you a reset
+              code.
             </p>
 
             <AnimatePresence>
-              {error && (
+              {apiError && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <ErrorBanner message={error} />
+                  <ErrorBanner message={apiError} />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSendCode}>
-              <Field id="forgot-email" label="Email address">
+            <form onSubmit={emailForm.handleSubmit(onSendCode)} noValidate>
+              <Field
+                label="Email address"
+                hint={err(emailForm.formState.errors.email?.message)}
+              >
                 <AuthInput
-                  id="forgot-email"
+                  {...emailForm.register("email")}
                   type="email"
-                  autoComplete="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   icon={<Mail size={12} />}
-                  required
+                  error={!!emailForm.formState.errors.email}
+                  autoComplete="email"
                 />
               </Field>
 
-              <AuthButton loading={loading} className="mt-2 mb-2">
-                {loading ? (
+              <AuthButton
+                loading={emailForm.formState.isSubmitting}
+                className="mt-2 mb-2"
+              >
+                {emailForm.formState.isSubmitting ? (
                   <>
                     <Loader2 size={13} className="animate-spin" />
                     Sending…
@@ -245,6 +263,7 @@ export default function ForgotPasswordPage() {
                   </>
                 )}
               </AuthButton>
+
               <GhostButton type="button" onClick={() => router.push("/login")}>
                 <ArrowLeft size={12} /> Back to sign in
               </GhostButton>
@@ -266,57 +285,55 @@ export default function ForgotPasswordPage() {
               type="button"
               onClick={() => {
                 setStep(1);
-                setError("");
+                setApiError("");
               }}
-              className="flex items-center gap-1.5 text-[11px] text-[#9a9890] hover:text-[#1a1a18] mb-5 transition-colors"
+              className="flex items-center gap-1.5 text-[11px] text-[#9a9890] hover:text-[#1a1a18] dark:hover:text-[#f0ede8] transition-colors mb-5"
             >
               <ArrowLeft size={11} /> Back
             </button>
 
             <StepDots total={4} current={2} />
 
-            <h1 className="text-[20px] font-medium text-[#1a1a18] tracking-tight mb-1">
+            <h1 className="text-[20px] font-medium text-[#1a1a18] dark:text-[#f0ede8] tracking-tight mb-1">
               Check your email
             </h1>
-            <p className="text-[12px] text-[#9a9890] mb-5 leading-relaxed">
-              Enter the 6-digit code we sent. It expires in 10 minutes.
+            <p className="text-[12px] text-[#9a9890] dark:text-[#555450] mb-4 leading-relaxed">
+              Enter the 6-digit code we sent. Expires in 10 minutes.
             </p>
 
-            {/* Email hint */}
-            <div className="flex items-center gap-3 p-3 bg-[#f5f4f0] rounded-lg mb-5">
-              <div className="w-8 h-8 rounded-lg bg-[#E1F5EE] flex items-center justify-center flex-shrink-0">
+            {/* Sent-to hint */}
+            <div className="flex items-center gap-3 p-3 bg-[#f5f4f0] dark:bg-[#232320] rounded-lg mb-5">
+              <div className="w-8 h-8 rounded-lg bg-[#E1F5EE] dark:bg-[#0F3028] flex items-center justify-center flex-shrink-0">
                 <Mail size={14} className="text-[#0F6E56]" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-[12px] font-medium text-[#1a1a18]">
-                  {email}
+                <p className="text-[12px] font-medium text-[#1a1a18] dark:text-[#f0ede8]">
+                  {sentEmail}
                 </p>
-                <p className="text-[10px] text-[#9a9890]">
-                  {"Check spam if you don't see it"}
+                <p className="text-[10px] text-[#9a9890] dark:text-[#555450]">
+                  Check spam if you don&apos;t see it
                 </p>
               </div>
             </div>
 
             <AnimatePresence>
-              {error && (
+              {apiError && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-3"
                 >
-                  <ErrorBanner message={error} />
+                  <ErrorBanner message={apiError} />
                 </motion.div>
               )}
             </AnimatePresence>
 
             <form onSubmit={handleVerifyOtp}>
-              <div className="mb-2">
-                <OtpInput value={otp} onChange={setOtp} error={!!error} />
-              </div>
+              <OtpInput value={otp} onChange={setOtp} error={!!apiError} />
 
               {/* Resend + timer */}
-              <div className="flex items-center justify-between mb-5 mt-3">
+              <div className="flex items-center justify-between mt-3 mb-5">
                 <button
                   type="button"
                   onClick={handleResend}
@@ -325,27 +342,18 @@ export default function ForgotPasswordPage() {
                     "text-[11px] transition-colors",
                     canResend
                       ? "text-[#0F6E56] hover:text-[#085041] cursor-pointer"
-                      : "text-[#c0bdb5] cursor-not-allowed",
+                      : "text-[#c0bdb5] dark:text-[#3a3a38] cursor-not-allowed",
                   ].join(" ")}
                 >
                   Resend code
                 </button>
-                <span className="text-[11px] text-[#9a9890] tabular-nums">
+                <span className="text-[11px] text-[#9a9890] dark:text-[#555450] tabular-nums">
                   {timer > 0 ? formatTimer(timer) : "Expired"}
                 </span>
               </div>
 
-              <AuthButton loading={loading} disabled={!otpComplete}>
-                {loading ? (
-                  <>
-                    <Loader2 size={13} className="animate-spin" />
-                    Verifying…
-                  </>
-                ) : (
-                  <>
-                    Verify code <ArrowRight size={13} />
-                  </>
-                )}
+              <AuthButton disabled={!otpComplete}>
+                Verify code <ArrowRight size={13} />
               </AuthButton>
             </form>
           </motion.div>
@@ -363,46 +371,51 @@ export default function ForgotPasswordPage() {
           >
             <StepDots total={4} current={3} />
 
-            <h1 className="text-[20px] font-medium text-[#1a1a18] tracking-tight mb-1">
+            <h1 className="text-[20px] font-medium text-[#1a1a18] dark:text-[#f0ede8] tracking-tight mb-1">
               Set new password
             </h1>
-            <p className="text-[12px] text-[#9a9890] mb-6 leading-relaxed">
-              {"Choose a strong password. You'll use this to sign in going forward."}
+            <p className="text-[12px] text-[#9a9890] dark:text-[#555450] mb-6 leading-relaxed">
+              Choose a strong password for your account.
             </p>
 
             <AnimatePresence>
-              {error && (
+              {apiError && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <ErrorBanner message={error} />
+                  <ErrorBanner message={apiError} />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleResetPassword}>
+            <form
+              onSubmit={passwordForm.handleSubmit(onSetPassword)}
+              noValidate
+            >
               <Field
-                id="forgot-new-password"
                 label="New password"
-                hint={<StrengthBar password={password} />}
+                hint={
+                  passwordForm.formState.errors.password ? (
+                    err(passwordForm.formState.errors.password.message)
+                  ) : (
+                    <StrengthBar password={newPassword} />
+                  )
+                }
               >
                 <AuthInput
-                  id="forgot-new-password"
+                  {...passwordForm.register("password")}
                   type={showPw ? "text" : "password"}
-                  autoComplete="new-password"
                   placeholder="Min. 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   icon={<Lock size={12} />}
-                  required
+                  error={!!passwordForm.formState.errors.password}
+                  autoComplete="new-password"
                   trailing={
                     <button
                       type="button"
                       onClick={() => setShowPw(!showPw)}
-                      className="text-[#c0bdb5] hover:text-[#888]"
-                      aria-label={showPw ? "Hide" : "Show"}
+                      aria-label={showPw ? "Hide password" : "Show password"}
                     >
                       {showPw ? <EyeOff size={12} /> : <Eye size={12} />}
                     </button>
@@ -410,19 +423,20 @@ export default function ForgotPasswordPage() {
                 />
               </Field>
 
-              <Field id="forgot-confirm-password" label="Confirm password">
+              <Field
+                label="Confirm password"
+                hint={err(passwordForm.formState.errors.confirm?.message)}
+              >
                 <AuthInput
-                  id="forgot-confirm-password"
+                  {...passwordForm.register("confirm")}
                   type={showCf ? "text" : "password"}
-                  autoComplete="new-password"
                   placeholder="Repeat password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
                   icon={<Lock size={12} />}
-                  error={!!confirm && confirm !== password}
-                  required
+                  error={!!passwordForm.formState.errors.confirm}
+                  autoComplete="new-password"
                   trailing={
-                    confirm && confirm === password ? (
+                    passwordForm.watch("confirm") &&
+                    !passwordForm.formState.errors.confirm ? (
                       <CheckCircle
                         size={12}
                         className="text-[#0F6E56]"
@@ -432,7 +446,6 @@ export default function ForgotPasswordPage() {
                       <button
                         type="button"
                         onClick={() => setShowCf(!showCf)}
-                        className="text-[#c0bdb5] hover:text-[#888]"
                         aria-label={showCf ? "Hide" : "Show"}
                       >
                         {showCf ? <EyeOff size={12} /> : <Eye size={12} />}
@@ -442,8 +455,11 @@ export default function ForgotPasswordPage() {
                 />
               </Field>
 
-              <AuthButton loading={loading} className="mt-2">
-                {loading ? (
+              <AuthButton
+                loading={passwordForm.formState.isSubmitting}
+                className="mt-2"
+              >
+                {passwordForm.formState.isSubmitting ? (
                   <>
                     <Loader2 size={13} className="animate-spin" />
                     Resetting…
@@ -458,7 +474,7 @@ export default function ForgotPasswordPage() {
           </motion.div>
         )}
 
-        {/* ── Step 4 — success ─────────────────────────── */}
+        {/* ── Step 4 — success ──────────────────────────── */}
         {step === 4 && (
           <motion.div
             key="s4"
@@ -469,14 +485,13 @@ export default function ForgotPasswordPage() {
           >
             <StepDots total={4} current={5} />
 
-            {/* Animated success ring */}
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
               className="relative mb-5"
             >
-              <div className="w-16 h-16 rounded-full bg-[#E1F5EE] flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-[#E1F5EE] dark:bg-[#0F3028] flex items-center justify-center">
                 <CheckCircle
                   size={28}
                   className="text-[#0F6E56]"
@@ -486,12 +501,12 @@ export default function ForgotPasswordPage() {
               <div className="absolute inset-[-6px] rounded-full border-2 border-[#9FE1CB] opacity-40" />
             </motion.div>
 
-            <h1 className="text-[20px] font-medium text-[#1a1a18] tracking-tight mb-2">
+            <h1 className="text-[20px] font-medium text-[#1a1a18] dark:text-[#f0ede8] tracking-tight mb-2">
               Password reset
             </h1>
-            <p className="text-[12px] text-[#9a9890] leading-relaxed mb-7 max-w-[260px]">
-              Your password has been updated successfully. You can now sign in
-              with your new password.
+            <p className="text-[12px] text-[#9a9890] dark:text-[#555450] leading-relaxed mb-7 max-w-[260px]">
+              Your password has been updated. You can now sign in with your new
+              password.
             </p>
 
             <AuthButton

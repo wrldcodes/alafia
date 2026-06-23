@@ -13,105 +13,104 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-sand-50 flex flex-col md:block">
-      {/* Left panel — decorative brand side */}
-      <div className="hidden md:flex md:w-[45%] lg:w-[42%] md:fixed md:inset-y-0 md:left-0 relative bg-teal-900 flex-col justify-between p-10 overflow-hidden z-0">
-        {/* Background texture overlay */}
+    <div className="min-h-screen bg-[#f5f4f0] dark:bg-[#0f0f0e] flex flex-col lg:flex-row">
+      {/* Left panel — brand side (tablet + desktop) */}
+      <aside className="hidden lg:flex lg:w-[42%] xl:w-[38%] lg:fixed lg:inset-y-0 lg:left-0 flex-col bg-[#0a3d2e] relative overflow-hidden flex-shrink-0 z-0">
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 80%, #3aab8a 0%, transparent 50%),
-                              radial-gradient(circle at 80% 20%, #a887e9 0%, transparent 50%),
-                              radial-gradient(circle at 50% 50%, #1e7d63 0%, transparent 70%)`,
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage:
+              "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
           }}
         />
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-2 no-underline group">
+        <div className="relative z-10 flex flex-col h-full p-10 xl:p-12">
+          <Link href="/" className="inline-flex no-underline">
             <Image
               src="/alafialogo-transparent.png"
               alt="Aláfíà logo"
               width={160}
               height={73}
-              className="h-10 w-auto brightness-0 invert"
+              className="h-10 w-auto object-contain object-left brightness-0 invert"
               priority
             />
           </Link>
-        </div>
 
-        {/* Center quote */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
-          <blockquote className="space-y-4">
-            <p className="font-display text-3xl lg:text-4xl text-white leading-snug italic">
-              {"\"Healthcare that reaches "}<span className="text-teal-400">everyone</span>{".\""}
+          <div className="flex-1 flex flex-col justify-center py-12">
+            <p className="text-[11px] text-white/40 tracking-[.1em] uppercase mb-5">
+              Aláfíà Health
             </p>
-           
-          </blockquote>
+            <blockquote className="font-display text-[30px] xl:text-[34px] font-medium text-white leading-tight tracking-tight mb-8">
+              {"Healthcare that reaches "}
+              <span className="text-[#5DCAA5]">everyone.</span>
+            </blockquote>
 
-          {/* Stats row */}
-          <div className="mt-12 grid grid-cols-3 gap-4">
-            {[
-              { value: "10k+", label: "Patients served" },
-              { value: "500+", label: "Clinics registered" },
-              { value: "99%", label: "Uptime" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-teal-300 mt-0.5">{stat.label}</p>
-              </div>
-            ))}
+            <div className="flex gap-8">
+              {[
+                { value: "10k+", label: "Patients served" },
+                { value: "500+", label: "Clinics registered" },
+                { value: "99%", label: "Uptime" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-[20px] font-semibold text-white tracking-tight">
+                    {stat.value}
+                  </p>
+                  <p className="text-[11px] text-white/40 mt-0.5">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-6 border-t border-white/10">
+            <div className="flex">
+              {["#1D9E75", "#378ADD", "#8B5CF6"].map((color, i) => (
+                <div
+                  key={color}
+                  className="w-7 h-7 rounded-full border-2 border-white/20 text-[9px] font-semibold text-white flex items-center justify-center"
+                  style={{ background: color, marginLeft: i > 0 ? -8 : 0 }}
+                >
+                  {String.fromCharCode(65 + i)}
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-white/50 leading-snug">
+              Join thousands of patients and
+              <br />
+              clinics already on the platform
+            </p>
           </div>
         </div>
-
-        {/* Footer quote attribution */}
-        <div className="relative z-10 flex items-center gap-3 border-t border-teal-700/50 pt-6">
-          <div className="flex -space-x-2">
-            {["bg-teal-400", "bg-emerald-500", "bg-purple-400"].map((color, i) => (
-              <div key={i} className={`h-8 w-8 rounded-full ${color} border-2 border-teal-900 flex items-center justify-center`}>
-                <span className="text-[10px] font-bold text-white">{String.fromCharCode(65 + i)}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-teal-300 leading-snug">
-            Join thousands of patients and clinics <br />already on the platform
-          </p>
-        </div>
-      </div>
+      </aside>
 
       {/* Right panel — auth form */}
-      <div className="flex-1 flex flex-col min-h-screen md:ml-[45%] lg:ml-[42%] relative z-10 bg-sand-50">
-        {/* Mobile logo */}
-        <div className="md:hidden flex items-center justify-between px-6 py-5 border-b border-sand-200">
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-[42%] xl:ml-[38%] relative z-10">
+        <div className="lg:hidden flex items-center justify-between px-6 py-5 border-b border-[#e8e6e0] dark:border-[#2c2c2a]">
           <Link href="/" className="inline-flex items-center gap-2 no-underline">
             <Image
               src="/alafialogo-transparent.png"
               alt="Aláfíà logo"
               width={120}
               height={55}
-              className="h-7 w-auto"
+              className="h-7 w-auto dark:brightness-0 dark:invert"
               priority
             />
           </Link>
         </div>
 
-        {/* Form content */}
-        <div className="flex-1 flex flex-col px-6 py-12">
-          <div className="w-full max-w-md mx-auto my-auto">
-            {children}
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-16 lg:px-12">
+          <div className="w-full max-w-[400px] my-auto">{children}</div>
         </div>
 
-        {/* Bottom footer */}
-        <div className="px-6 py-4 text-center border-t border-sand-200 mt-auto">
-          <p className="text-xs text-slate-400">
-            © {new Date().getFullYear()} Aláfíà Health · <Link href={asRoute("/support")} className="hover:text-teal-600 no-underline">Support</Link>
+        <div className="px-6 py-4 text-center border-t border-[#e8e6e0] dark:border-[#2c2c2a] mt-auto">
+          <p className="text-[11px] text-[#c0bdb5] dark:text-[#555450]">
+            © {new Date().getFullYear()} Aláfíà Health ·{" "}
+            <Link
+              href={asRoute("/support")}
+              className="hover:text-[#0F6E56] no-underline transition-colors"
+            >
+              Support
+            </Link>
           </p>
         </div>
       </div>

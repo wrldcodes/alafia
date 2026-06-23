@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus } from "@/lib/generated/prisma/client";
 import {
   requireAuth,
   requireRole,

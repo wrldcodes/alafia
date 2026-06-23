@@ -148,7 +148,7 @@ export default function ClinicDashboardPage() {
         {/* Donut chart */}
         <div className="flex-shrink-0 flex flex-col px-4 py-4" style={{ width: 220 }}>
           <div className="mb-3 flex-shrink-0">
-            <div className="text-[12px] font-medium text-[var(--color-text-primary)]">Today's status</div>
+            <div className="text-[12px] font-medium text-[var(--color-text-primary)]">Today&apos;s status</div>
             <div className="text-[10px] text-[var(--color-text-tertiary)]">Appointment split</div>
           </div>
           <div className="flex-1 min-h-0">

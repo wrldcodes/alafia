@@ -3,6 +3,7 @@ import {
   ButtonHTMLAttributes,
   isValidElement,
   cloneElement,
+  type ReactElement,
 } from "react";
 import { cn } from "@/lib/utils";
 
@@ -79,13 +80,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     );
 
     if (asChild && isValidElement(children)) {
-      // Clone the child element (e.g., a Next `Link` or `a`) and apply button classes
-      const child = children as React.ReactElement<{ className?: string; disabled?: boolean }>;
+      const child = children as ReactElement<{
+        className?: string;
+        disabled?: boolean;
+      }>;
       return cloneElement(child, {
-        className: cn(classes, child.props?.className),
-        ref,
-        disabled: disabled || loading,
         ...props,
+        className: cn(classes, child.props?.className),
+        disabled: disabled || loading,
       });
     }
 

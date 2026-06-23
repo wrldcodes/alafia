@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { metadataBase } from "@/lib/site";
-import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { VideoBackground } from "@/components/marketing/VideoPosterBg";
 import { Navbar } from "@/components/marketing/Navbar";
 

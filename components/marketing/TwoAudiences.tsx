@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, User, Building2 } from "lucide-react";
+import { ArrowRight, Check, User } from "lucide-react";
 import { useGsapReveal } from "@/hooks/useGsapReveal";
 
 /**

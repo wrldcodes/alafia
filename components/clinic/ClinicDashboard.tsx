@@ -211,7 +211,7 @@ function OverviewView({ onPatientClick }: { onPatientClick: (p: typeof PATIENTS[
             <thead><tr className="bg-sand-50 border-b border-sand-200">{['Patient','Time','Doctor','Type','Status'].map(h=><th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{h}</th>)}</tr></thead>
             <tbody>
               {appts.map(({ name, time, doctor, type, status }) => (
-                <tr key={name} onClick={() => onPatientClick(PATIENTS.find(p=>p.name===name))} className="border-b border-sand-50 last:border-0 hover:bg-sand-50 cursor-pointer transition-colors">
+                <tr key={name} onClick={() => { const patient = PATIENTS.find(p=>p.name===name); if (patient) onPatientClick(patient); }} className="border-b border-sand-50 last:border-0 hover:bg-sand-50 cursor-pointer transition-colors">
                   <td className="px-4 py-2.5"><div className="flex items-center gap-2.5 text-[13px] font-medium text-slate-800"><div className="w-7 h-7 rounded-full bg-teal-100 text-teal-800 text-[10px] font-semibold flex items-center justify-center flex-shrink-0">{getInitials(name)}</div>{name}</div></td>
                   <td className="px-4 py-2.5 text-[13px] text-slate-600">{time}</td>
                   <td className="px-4 py-2.5 text-[13px] text-slate-600">{doctor}</td>

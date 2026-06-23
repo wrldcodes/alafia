@@ -1,7 +1,6 @@
 // app/(marketing)/page.tsx
 import type { Metadata } from "next";
 import {
-  Navbar,
   Hero,
   TrustStrip,
   TwoAudiences,
@@ -11,9 +10,6 @@ import {
   Footer,
 } from "@/components/marketing";
 
-const siteUrl = "https://alafia-ara.vercel.app";
-
-// app/(marketing)/page.tsx
 export const metadata: Metadata = {
   title: 'Aláfíà- Health for Every Community',
   description: 'Aláfíà connects patients to local clinics, making healthcare accessible for all communities.',

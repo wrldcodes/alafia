@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next'
 import './globals.css'
+import  ThemeProvider  from '@/app/ThemeProvider';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider'
 export const metadata: Metadata = {
   title: {
@@ -18,16 +19,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           rel="preload"
           as="image"
-          href='/hero-poster.jpg'
-          fetchPriority='high'
+          href="/hero-poster.jpg"
+          fetchPriority="high"
         />
       </head>
-        
+
       <body>
-        <SmoothScrollProvider>  
-          {children}
+        <SmoothScrollProvider>
+          <ThemeProvider>{children}</ThemeProvider>
         </SmoothScrollProvider>
       </body>
     </html>
-  )
+  );
 }

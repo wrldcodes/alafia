@@ -1,6 +1,14 @@
 "use client";
 
+// app/(auth)/login/page.tsx
+// Uses react-hook-form + zodResolver for form state management.
+// No manual useState per field — single useForm() handles everything.
+// Zod schema validates on blur and submit, not every keystroke.
+
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +24,6 @@ import {
 } from "lucide-react";
 import {
   AuthCard,
-  LogoMark,
   Field,
   AuthInput,
   AuthButton,
@@ -24,42 +31,62 @@ import {
 } from "@/components/auth/AuthCard";
 import RoleCard from "@/components/auth/RoleCard";
 
+// ── Zod schema ────────────────────────────────────────────────────────────
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
 type Role = "PATIENT" | "CLINIC";
+
+const REDIRECTS: Record<string, string> = {
+  SUPER_ADMIN: "/dashboard/admin",
+  CLINIC_ADMIN: "/dashboard/clinic",
+  CLINIC_STAFF: "/dashboard/staff",
+  DOCTOR: "/dashboard/doctor",
+  PATIENT: "/dashboard/patient",
+};
 
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<Role>("PATIENT");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [apiError, setApiError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
 
+  async function onSubmit(data: LoginForm) {
+    setApiError("");
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
-      const data = await res.json();
+      const json = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Invalid email or password");
+        setApiError(json.error ?? "Invalid email or password");
         return;
       }
 
-      router.push(data.redirectTo ?? "/clinic");
+      if (json.token) localStorage.setItem("alafia_token", json.token);
+      if (json.user?.clinicId)
+        localStorage.setItem("alafia_clinic_id", json.user.clinicId);
+
+      router.push(REDIRECTS[json.user?.role] ?? "/dashboard");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+      setApiError("Something went wrong. Please try again.");
     }
   }
 
@@ -67,22 +94,31 @@ export default function LoginPage() {
     <AuthCard
       footer={
         <>
-          New to Alafia?{" "}
-          <Link href="/register" className="text-[#0F6E56] hover:underline">
-            Sign up
+          New to Aláfíà?{" "}
+          <Link
+            href="/register?role=PATIENT"
+            className="text-[#0F6E56] hover:underline"
+          >
+            Patient sign up
+          </Link>
+          {" · "}
+          <Link
+            href="/register?role=CLINIC"
+            className="text-[#0F6E56] hover:underline"
+          >
+            Clinic sign up
           </Link>
         </>
       }
     >
-      <LogoMark />
-
-      <h1 className="text-[20px] font-medium text-[#1a1a18] tracking-tight mb-1">
+      <h1 className="text-[20px] font-medium text-[#1a1a18] dark:text-[#f0ede8] tracking-tight mb-1">
         Welcome back
       </h1>
-      <p className="text-[12px] text-[#9a9890] mb-6 leading-relaxed">
-        Sign in to your Alafia account to continue.
+      <p className="text-[12px] text-[#9a9890] dark:text-[#555450] mb-6 leading-relaxed">
+        Sign in to your Aláfíà account to continue.
       </p>
 
+      {/* Role selector */}
       <p className="text-[10px] font-semibold text-[#9a9890] tracking-[.07em] uppercase mb-2">
         Sign in as
       </p>
@@ -104,77 +140,93 @@ export default function LoginPage() {
       </div>
 
       <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-[#e8e6e0]" />
-        <span className="text-[10px] text-[#c0bdb5]">
+        <div className="flex-1 h-px bg-[#e8e6e0] dark:bg-[#2c2c2a]" />
+        <span className="text-[10px] text-[#c0bdb5] dark:text-[#3a3a38]">
           or sign in with email
         </span>
-        <div className="flex-1 h-px bg-[#e8e6e0]" />
+        <div className="flex-1 h-px bg-[#e8e6e0] dark:bg-[#2c2c2a]" />
       </div>
 
+      {/* API-level error (wrong credentials etc.) */}
       <AnimatePresence>
-        {error && (
+        {apiError && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <ErrorBanner message={error} />
+            <ErrorBanner message={apiError} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit}>
-        <Field id="login-email" label="Email address">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        {/* Email */}
+        <Field
+          label="Email address"
+          hint={
+            errors.email && (
+              <p className="text-[10px] text-[#E24B4A]">
+                {errors.email.message}
+              </p>
+            )
+          }
+        >
           <AuthInput
-            id="login-email"
+            {...register("email")}
             type="email"
-            autoComplete="email"
             placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             icon={<Mail size={13} />}
-            error={!!error}
-            required
+            error={!!errors.email}
+            autoComplete="email"
           />
         </Field>
 
-        <Field id="login-password" label="Password">
+        {/* Password */}
+        <Field
+          label="Password"
+          hint={
+            errors.password ? (
+              <p className="text-[10px] text-[#E24B4A]">
+                {errors.password.message}
+              </p>
+            ) : (
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-[11px] text-[#0F6E56] hover:text-[#085041] transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )
+          }
+        >
           <AuthInput
-            id="login-password"
+            {...register("password")}
             type={showPw ? "text" : "password"}
-            autoComplete="current-password"
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             icon={<Lock size={13} />}
-            error={!!error}
-            required
+            error={!!errors.password}
+            autoComplete="current-password"
             trailing={
               <button
                 type="button"
-                onClick={() => setShowPw((value) => !value)}
-                className="text-[#c0bdb5] hover:text-[#888] transition-colors"
+                onClick={() => setShowPw(!showPw)}
+                className="hover:text-[#888] transition-colors"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
                 {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
             }
           />
-          <div className="text-right mt-1.5">
-            <Link
-              href="/forgot-password"
-              className="text-[11px] text-[#0F6E56] hover:text-[#085041]"
-            >
-              Forgot password?
-            </Link>
-          </div>
         </Field>
 
-        <AuthButton loading={loading} className="mt-2">
-          {loading ? (
+        <AuthButton loading={isSubmitting} className="mt-3">
+          {isSubmitting ? (
             <>
               <Loader2 size={13} className="animate-spin" />
-              Signing in...
+              Signing in…
             </>
           ) : (
             <>
