@@ -4,8 +4,10 @@ node_modules/
 .env
 .tools/
 
-/lib/generated/prisma
 
 # Local test / API response artifacts
 del_*.json
 sa_login.json
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
